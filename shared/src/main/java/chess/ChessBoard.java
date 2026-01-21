@@ -1,5 +1,6 @@
 package chess;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -98,6 +99,6 @@ public class ChessBoard {
 
     @Override
     public int hashCode() {
-        return Objects.hash((Object) PiecesMatrix);
+        return Arrays.deepHashCode(PiecesMatrix);
     }
 }
