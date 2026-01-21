@@ -58,7 +58,7 @@ public class ChessPiece {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if ((obj.getClass() != this.getClass())) {
+        if (obj == null || (obj.getClass() != this.getClass())) {
             return false;
         }
         return ((ChessPiece) obj).getPieceType() == this.getPieceType()

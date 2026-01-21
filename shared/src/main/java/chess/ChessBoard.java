@@ -36,12 +36,51 @@ public class ChessBoard {
         return this.PiecesMatrix[position.getRow()-1][position.getColumn()-1];
     }
 
+
+    private void setupSide(ChessGame.TeamColor color) {
+        int baseRow;
+        int pawnRow;
+
+        if (color ==  ChessGame.TeamColor.WHITE) {
+            baseRow = 1;
+            pawnRow = 2;
+        } else {
+            baseRow = 8;
+            pawnRow = 7;
+        }
+
+        // Rooks
+        this.addPiece(new ChessPosition(baseRow,1),new ChessPiece(color,ChessPiece.PieceType.ROOK));
+        this.addPiece(new ChessPosition(baseRow,8),new ChessPiece(color,ChessPiece.PieceType.ROOK));
+
+        // Knights
+        this.addPiece(new ChessPosition(baseRow,2),new ChessPiece(color,ChessPiece.PieceType.KNIGHT));
+        this.addPiece(new ChessPosition(baseRow,7),new ChessPiece(color,ChessPiece.PieceType.KNIGHT));
+
+        // Bishops
+        this.addPiece(new ChessPosition(baseRow,3),new ChessPiece(color,ChessPiece.PieceType.BISHOP));
+        this.addPiece(new ChessPosition(baseRow,6),new ChessPiece(color,ChessPiece.PieceType.BISHOP));
+
+        // Queen
+        this.addPiece(new ChessPosition(baseRow,4),new ChessPiece(color,ChessPiece.PieceType.QUEEN));
+
+        // King
+        this.addPiece(new ChessPosition(baseRow,5),new ChessPiece(color,ChessPiece.PieceType.KING));
+
+        // Pawns
+        for (int i = 1; i < 9; i++) {
+            this.addPiece(new ChessPosition(pawnRow,i),new ChessPiece(color,ChessPiece.PieceType.PAWN));
+        }
+    }
     /**
      * Sets the board to the default starting board
      * (How the game of chess normally starts)
      */
     public void resetBoard() {
         this.PiecesMatrix = new ChessPiece[8][8];
+
+        setupSide(ChessGame.TeamColor.WHITE);
+        setupSide(ChessGame.TeamColor.BLACK);
     }
 
     @Override
@@ -50,11 +89,11 @@ public class ChessBoard {
             return true;
         }
 
-        if (!(obj.getClass() == this.getClass())) {
+        if (obj == null || !(obj.getClass() == this.getClass())) {
             return false;
         }
 
-        return (this.PiecesMatrix == ((ChessBoard) obj).PiecesMatrix);
+        return java.util.Arrays.deepEquals(this.PiecesMatrix, ((ChessBoard) obj).PiecesMatrix);
     }
 
     @Override
