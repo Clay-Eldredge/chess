@@ -61,8 +61,8 @@ public class ChessPiece {
         if (obj == null || (obj.getClass() != this.getClass())) {
             return false;
         }
-        return ((ChessPiece) obj).getPieceType() == this.getPieceType()
-                && ((ChessPiece) obj).getTeamColor() == this.getTeamColor();
+        return ((ChessPiece) obj).getPieceType().equals(this.getPieceType())
+                && ((ChessPiece) obj).getTeamColor().equals(this.getTeamColor());
     }
 
     @Override
