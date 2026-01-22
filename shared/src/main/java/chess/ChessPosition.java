@@ -48,7 +48,9 @@ public class ChessPosition {
             return false;
         }
 
-        return ((ChessPosition) obj).getColumn() == this.getColumn()
-                && (((ChessPosition) obj).getRow() == this.getRow());
+        ChessPosition chessPositionObj = (ChessPosition) obj;
+
+        return Objects.equals(chessPositionObj.getColumn(), this.getColumn())
+                && Objects.equals(chessPositionObj.getRow(), this.getRow());
     }
 }

@@ -1,5 +1,6 @@
 package chess;
 
+import javax.naming.event.ObjectChangeListener;
 import java.util.Collection;
 import java.util.Objects;
 
@@ -61,8 +62,11 @@ public class ChessPiece {
         if (obj == null || (obj.getClass() != this.getClass())) {
             return false;
         }
-        return ((ChessPiece) obj).getPieceType().equals(this.getPieceType())
-                && ((ChessPiece) obj).getTeamColor().equals(this.getTeamColor());
+
+        ChessPiece chessPieceObj = (ChessPiece) obj;
+
+        return Objects.equals(chessPieceObj.getPieceType(), this.getPieceType())
+                && Objects.equals(chessPieceObj.getTeamColor(), this.getTeamColor());
     }
 
     @Override
