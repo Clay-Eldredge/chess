@@ -1,6 +1,8 @@
 package chess;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * For a class that can manage a chess game, making moves on a board
@@ -53,7 +55,12 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        throw new RuntimeException("Not implemented");
+        ChessPiece piece = this.getBoard().getPiece(startPosition);
+        if (piece != null) {
+            return piece.pieceMoves(this.getBoard(), startPosition);
+        } else {
+            return new ArrayList<>();
+        }
     }
 
     /**
@@ -63,7 +70,15 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        throw new RuntimeException("Not implemented");
+        Collection<ChessMove> validMoves = validMoves(move.getStartPosition());
+        if (validMoves.contains(move)) {
+            ChessPiece piece = this.board.getPiece(move.getStartPosition());
+            if (move.getPromotionPiece() != null) {
+                piece = new ChessPiece(piece.getTeamColor(),move.getPromotionPiece());
+            }
+            this.board.addPiece(move.getEndPosition(), piece);
+            this.board.addPiece(move.getStartPosition(), null);
+        }
     }
 
     /**
@@ -113,5 +128,26 @@ public class ChessGame {
      */
     public ChessBoard getBoard() {
         return board;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(board, currentTurn);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (obj == null || obj.getClass() != this.getClass()) {
+            return false;
+        }
+
+        ChessGame casted = (ChessGame) obj;
+
+        return Objects.equals(this.getBoard(), casted.getBoard())
+                && Objects.equals(this.getTeamTurn(), casted.getTeamTurn());
     }
 }
