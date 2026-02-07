@@ -122,6 +122,32 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
+        if (isInCheck(teamColor)) {
+            for (int i = 1; i < 8; i++) {
+                for (int j = 1; j < 8; j++) {
+                    ChessPosition start = new ChessPosition(i, j);
+                    ChessPiece piece = this.board.getPiece(start);
+
+                    if (piece != null && piece.getTeamColor() != teamColor) {
+                        for (ChessMove move : piece.pieceMoves(this.board,start)) {
+                            ChessPiece capturedPiece = this.board.getPiece(move.getEndPosition());
+
+                            board.addPiece(move.getEndPosition(), piece);
+                            board.addPiece(move.getStartPosition(), null);
+
+                            boolean inCheck = isInCheck(teamColor);
+
+                            board.addPiece(move.getEndPosition(), capturedPiece);
+                            board.addPiece(move.getStartPosition(), piece);
+
+                            if (inCheck) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
         return false;
     }
 
