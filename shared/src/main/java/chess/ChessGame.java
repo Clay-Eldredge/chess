@@ -106,7 +106,7 @@ public class ChessGame {
             ChessPiece opPiece = this.board.getPiece(opPos);
             Collection<ChessMove> moves = opPiece.pieceMoves(this.board, opPos);
             for (ChessMove move : moves) {
-                if (move.getEndPosition() == kingPos) {
+                if (move.getEndPosition().equals(kingPos)) {
                     return true;
                 }
             }
