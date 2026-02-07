@@ -55,9 +55,26 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
+        Collection<ChessMove> moves = new ArrayList<>();
         ChessPiece piece = this.getBoard().getPiece(startPosition);
         if (piece != null) {
-            return piece.pieceMoves(this.getBoard(), startPosition);
+            ChessGame.TeamColor color = piece.getTeamColor();
+            for ( ChessMove move : piece.pieceMoves(this.getBoard(), startPosition)) {
+                ChessPiece capturedPiece = this.board.getPiece(move.getEndPosition());
+
+                board.addPiece(move.getEndPosition(), piece);
+                board.addPiece(move.getStartPosition(), null);
+
+                boolean inCheck = isInCheck(color);
+
+                board.addPiece(move.getEndPosition(), capturedPiece);
+                board.addPiece(move.getStartPosition(), piece);
+
+                if (!inCheck) {
+                    moves.add(move);
+                }
+            }
+            return moves;
         } else {
             return new ArrayList<>();
         }
@@ -73,11 +90,22 @@ public class ChessGame {
         Collection<ChessMove> validMoves = validMoves(move.getStartPosition());
         if (validMoves.contains(move)) {
             ChessPiece piece = this.board.getPiece(move.getStartPosition());
+            if (piece.getTeamColor() != this.currentTurn) {
+                throw new InvalidMoveException();
+            }
             if (move.getPromotionPiece() != null) {
                 piece = new ChessPiece(piece.getTeamColor(),move.getPromotionPiece());
             }
             this.board.addPiece(move.getEndPosition(), piece);
             this.board.addPiece(move.getStartPosition(), null);
+
+            if (piece.getTeamColor() == TeamColor.BLACK) {
+                setTeamTurn(TeamColor.WHITE);
+            } else {
+                setTeamTurn(TeamColor.BLACK);
+            }
+        } else {
+            throw new InvalidMoveException();
         }
     }
 
