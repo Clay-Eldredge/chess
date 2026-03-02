@@ -18,4 +18,9 @@ public class MemoryUserDAO implements UserDAO {
 
         return user;
     }
+
+    @Override
+    public UserData createUser(UserData userData) throws DataAccessException {
+        return null;
+    }
 }

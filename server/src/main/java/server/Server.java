@@ -1,6 +1,9 @@
 package server;
 
 import com.google.gson.Gson;
+import dataaccess.AuthDAO;
+import dataaccess.MemoryUserDAO;
+import dataaccess.UserDAO;
 import io.javalin.*;
 import model.UserData;
 import service.UserService;
@@ -14,7 +17,7 @@ public class Server {
     public Server() {
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
 
-        // Register your endpoints and exception handlers here.
+        UserDAO userDAO = new MemoryUserDAO();
 
         // Register a User
         javalin.post("/user", ctx -> {
@@ -22,7 +25,7 @@ public class Server {
 
             RegisterRequest request = gson.fromJson(ctx.body(), RegisterRequest.class);
 
-            UserService service = new UserService();
+            UserService service = new UserService(userDAO);
 
             RegisterResult result = service.register(request);
 
