@@ -16,6 +16,7 @@ public class Server {
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
 
         UserDAO userDAO = new MemoryUserDAO();
+        AuthDAO authDAO = new MemoryAuthDAO();
 
         // Register a User
         javalin.post("/user", ctx -> {
@@ -23,7 +24,7 @@ public class Server {
 
             RegisterRequest request = gson.fromJson(ctx.body(), RegisterRequest.class);
 
-            UserService service = new UserService(userDAO);
+            UserService service = new UserService(userDAO, authDAO);
 
             try {
                 RegisterResult result = service.register(request);
@@ -32,6 +33,12 @@ public class Server {
             } catch (AlreadyTakenException e) {
                 ctx.status(403);
                 String jsonResponse = gson.toJson(new ErrorResponse("Error: username already taken"));
+                ctx.result(jsonResponse);
+            } catch (DataAccessException e) {
+                ctx.status(500);
+                String jsonResponse = gson.toJson(
+                        new ErrorResponse("Error: " + e.getMessage())
+                );
                 ctx.result(jsonResponse);
             }
         });
