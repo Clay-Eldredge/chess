@@ -22,7 +22,7 @@ public class UserService {
 
     public RegisterResult register(RegisterRequest request) throws DataAccessException {
         UserData user = userDAO.getUser(request.username());
-        System.out.println(user);
+
         if (user == null) {
             // Create user
             user = userDAO.createUser(new UserData(request.username(), request.password(), request.email()));
