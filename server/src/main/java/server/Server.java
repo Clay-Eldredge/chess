@@ -1,11 +1,9 @@
 package server;
 
 import com.google.gson.Gson;
-import dataaccess.AuthDAO;
-import dataaccess.MemoryUserDAO;
-import dataaccess.UserDAO;
+import dataaccess.*;
 import io.javalin.*;
-import model.UserData;
+import service.AlreadyTakenException;
 import service.UserService;
 import service.requests.RegisterRequest;
 import service.results.RegisterResult;
@@ -27,9 +25,15 @@ public class Server {
 
             UserService service = new UserService(userDAO);
 
-            RegisterResult result = service.register(request);
-
-            ctx.result(gson.toJson(result));
+            try {
+                RegisterResult result = service.register(request);
+                ctx.status(200);
+                ctx.result(gson.toJson(result));
+            } catch (AlreadyTakenException e) {
+                ctx.status(403);
+                String jsonResponse = gson.toJson(new ErrorResponse("Error: username already taken"));
+                ctx.result(jsonResponse);
+            }
         });
     }
 

@@ -21,6 +21,7 @@ public class MemoryUserDAO implements UserDAO {
 
     @Override
     public UserData createUser(UserData userData) throws DataAccessException {
-        return null;
+        users.put(userData.username(), userData);
+        return userData;
     }
 }
