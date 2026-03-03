@@ -1,11 +1,14 @@
 package service;
 
+import chess.ChessGame;
 import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
+import dataaccess.UserDAO;
 import model.AuthData;
 import model.GameData;
 import service.requests.CreateRequest;
+import service.requests.JoinRequest;
 import service.results.CreateResult;
 import service.results.GameInfo;
 import service.results.ListResult;
@@ -21,7 +24,7 @@ public class GameService {
         this.gameDAO = gameDAO;
     }
 
-    private void checkAuth(String authToken) throws DataAccessException {
+    private AuthData checkAuth(String authToken) throws DataAccessException {
         if (authToken == null) {
             throw new UnauthorizedException("User is not authorized");
         }
@@ -31,6 +34,8 @@ public class GameService {
         if (authData == null) {
             throw new UnauthorizedException("User is not authorized");
         }
+
+        return authData;
     }
 
     public CreateResult createGame(String authToken, CreateRequest createRequest) throws DataAccessException {
@@ -60,5 +65,39 @@ public class GameService {
                 .toArray(GameInfo[]::new);
 
         return new ListResult(entries);
+    }
+
+    public void joinGame(String authToken, JoinRequest joinRequest) throws DataAccessException {
+        if (joinRequest.gameID() == null || joinRequest.playerColor() == null) {
+            throw new BadRequestException("Bad request");
+        }
+
+        AuthData authData = checkAuth(authToken);
+        String username = authData.username();
+
+        GameData gameData = gameDAO.getGame(joinRequest.gameID());
+
+        if (gameData == null) {
+            throw new DataAccessException("Trying to join game that doesn't exist");
+        }
+
+        if (joinRequest.playerColor() == ChessGame.TeamColor.BLACK
+                && (gameData.blackUsername() != null || gameData.blackUsername().isEmpty())) {
+            throw new AlreadyTakenException("Spot is already filled");
+        }
+        if (joinRequest.playerColor() == ChessGame.TeamColor.WHITE
+                && (gameData.whiteUsername() != null || gameData.whiteUsername().isEmpty())) {
+            throw new AlreadyTakenException("Spot is already filled");
+        }
+
+        GameData updatedGame = new GameData(
+                gameData.gameID(),
+                joinRequest.playerColor() == ChessGame.TeamColor.WHITE ? username : gameData.whiteUsername(),
+                joinRequest.playerColor() == ChessGame.TeamColor.BLACK ? username : gameData.blackUsername(),
+                gameData.gameName(),
+                gameData.game()
+        );
+
+        gameDAO.updateGame(gameData.gameID(), updatedGame);
     }
 }

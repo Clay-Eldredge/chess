@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class MemoryGameDAO implements GameDAO {
     Map<String, GameData> games = new HashMap<>();
-    int currentId = 0;
+    int currentId = 1;
 
 
     @Override
@@ -22,8 +22,8 @@ public class MemoryGameDAO implements GameDAO {
     }
 
     @Override
-    public GameData getGame(String gameName) throws DataAccessException {
-        return null;
+    public GameData getGame(int gameID) throws DataAccessException {
+        return games.get(gameID);
     }
 
     @Override
@@ -32,8 +32,9 @@ public class MemoryGameDAO implements GameDAO {
     }
 
     @Override
-    public GameData updateGame(String gameName, GameData gameData) throws DataAccessException {
-        return null;
+    public GameData updateGame(int gameID, GameData gameData) throws DataAccessException {
+        games.put(Integer.toString(gameID),gameData);
+        return gameData;
     }
 
     @Override

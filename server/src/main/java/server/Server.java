@@ -5,10 +5,7 @@ import dataaccess.*;
 import io.javalin.*;
 import io.javalin.http.Context;
 import service.*;
-import service.requests.CreateRequest;
-import service.requests.LoginRequest;
-import service.requests.LogoutRequest;
-import service.requests.RegisterRequest;
+import service.requests.*;
 import service.results.CreateResult;
 import service.results.ListResult;
 import service.results.LoginResult;
@@ -142,16 +139,16 @@ public class Server {
 
         // Create game
         javalin.put("/game", ctx -> {
-
+            JoinRequest joinRequest = gson.fromJson(ctx.body(), JoinRequest.class);
             String authToken = ctx.header("authorization");
 
             GameService gameService = new GameService(authDAO, gameDAO);
 
             try {
-                ListResult listResult = gameService.listGames(authToken);
+                gameService.joinGame(authToken, joinRequest);
 
                 ctx.status(200);
-                ctx.result(gson.toJson(listResult));
+                ctx.result("{}");
             } catch (UnauthorizedException e) {
                 applyException(ctx, gson, e, 401);
             } catch (BadRequestException e) {
