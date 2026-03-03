@@ -91,9 +91,9 @@ public class Server {
 
         // Clear DB
         javalin.delete("/db", ctx -> {
-            userDAO.clearAll();
-            authDAO.clearAll();
-            gameDAO.clearAll();
+            ClearService clearService = new ClearService(userDAO, authDAO, gameDAO);
+
+            clearService.clearAll();
         });
 
         // Create game
