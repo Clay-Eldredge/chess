@@ -100,6 +100,22 @@ public class ChessPiece {
         return moves;
     }
 
+    private Collection<ChessMove> finalizePawnMove(ChessMove move, int targetRow) {
+        if ((targetRow == 1 && teamColor == ChessGame.TeamColor.BLACK) ||
+                (targetRow == 8 && teamColor == ChessGame.TeamColor.WHITE)) {
+            return getAllPromotionsForMove(move);
+        }
+
+        Collection<ChessMove> moves = new ArrayList<>();
+        moves.add(move);
+        return moves;
+    }
+
+    private boolean isPawnStartingRow(int row) {
+        return (teamColor == ChessGame.TeamColor.WHITE && row == 2) ||
+                (teamColor == ChessGame.TeamColor.BLACK && row == 7);
+    }
+
     private Collection<ChessMove> getAllPromotionsForMove(ChessMove move) {
         Collection<ChessMove> moves = new ArrayList<>();
         moves.add(new ChessMove(move.getStartPosition(), move.getEndPosition(), PieceType.BISHOP));
@@ -109,82 +125,69 @@ public class ChessPiece {
         return moves;
     }
 
-    private Collection<ChessMove> getDiagnolPawnMove(ChessBoard board, ChessPosition startPos, ChessPosition targetPos) {
+    private Collection<ChessMove> getDiagonalPawnMove(ChessBoard board, ChessPosition startPos, ChessPosition targetPos) {
         ChessPiece target = board.getPiece(targetPos);
-        if (target == null || target.getTeamColor().equals(this.getTeamColor())) {
+
+        if (target == null || target.getTeamColor() == teamColor) {
             return null;
-        } else {
-            ChessMove move = new ChessMove(startPos, targetPos, null);
-            if (targetPos.getRow() == 1 && this.getTeamColor().equals(ChessGame.TeamColor.BLACK)) {
-                return getAllPromotionsForMove(move);
-            }
-            if (targetPos.getRow() == 8 && this.getTeamColor().equals(ChessGame.TeamColor.WHITE)) {
-                return getAllPromotionsForMove(move);
-            }
-            Collection<ChessMove> moves = new ArrayList<>();
-            moves.add(move);
-            return moves;
         }
+
+        ChessMove move = new ChessMove(startPos, targetPos, null);
+        return finalizePawnMove(move, targetPos.getRow());
     }
 
     private Collection<ChessMove> getStraightPawnMove(ChessBoard board, ChessPosition startPos, ChessPosition targetPos) {
-        ChessPiece target = board.getPiece(targetPos);
-        if (target == null) {
-            ChessMove move = new ChessMove(startPos, targetPos, null);
-            if (targetPos.getRow() == 1 && this.getTeamColor().equals(ChessGame.TeamColor.BLACK)) {
-                return getAllPromotionsForMove(move);
-            }
-            if (targetPos.getRow() == 8 && this.getTeamColor().equals(ChessGame.TeamColor.WHITE)) {
-                return getAllPromotionsForMove(move);
-            }
-            Collection<ChessMove> moves = new ArrayList<>();
-            moves.add(move);
-            return moves;
-        } else {
+        if (board.getPiece(targetPos) != null) {
             return null;
         }
+
+        ChessMove move = new ChessMove(startPos, targetPos, null);
+        return finalizePawnMove(move, targetPos.getRow());
     }
 
     private Collection<ChessMove> getPawnMoves(ChessBoard board, ChessPosition startPos, int rowdx) {
+
         Collection<ChessMove> moves = new ArrayList<>();
 
-        ChessPosition nextPos = getPositionFromVector(board, startPos, rowdx, 1, 1);
-        if (isInBounds(nextPos)) {
-            Collection<ChessMove> movesToAdd = getDiagnolPawnMove(board, startPos, new ChessPosition(nextPos.getRow(), nextPos.getColumn()));
-            if (movesToAdd != null) {
-                moves.addAll(movesToAdd);
-            }
-        }
+        int[] diagCols = {1, -1};
 
-        nextPos = getPositionFromVector(board, startPos, rowdx, -1, 1);
-        if (isInBounds(nextPos)) {
-            Collection<ChessMove> movesToAdd = getDiagnolPawnMove(board, startPos, new ChessPosition(nextPos.getRow(), nextPos.getColumn()));
-            if (movesToAdd != null) {
-                moves.addAll(movesToAdd);
+        for (int coldx : diagCols) {
+            ChessPosition diag =
+                    getPositionFromVector(board, startPos, rowdx, coldx, 1);
+
+            if (isInBounds(diag)) {
+                Collection<ChessMove> movesToAdd =
+                        getDiagonalPawnMove(board, startPos, diag);
+
+                if (movesToAdd != null) {
+                    moves.addAll(movesToAdd);
+                }
             }
         }
 
         boolean spaceOneOpen = false;
 
-        nextPos = getPositionFromVector(board, startPos, rowdx, 0, 1);
-        if (isInBounds(nextPos)) {
-            Collection<ChessMove> movesToAdd = getStraightPawnMove(board, startPos, new ChessPosition(nextPos.getRow(), nextPos.getColumn()));
+        ChessPosition forward =
+                getPositionFromVector(board, startPos, rowdx, 0, 1);
+
+        if (isInBounds(forward)) {
+            Collection<ChessMove> movesToAdd =
+                    getStraightPawnMove(board, startPos, forward);
+
             if (movesToAdd != null) {
                 moves.addAll(movesToAdd);
                 spaceOneOpen = true;
             }
         }
 
-        if (spaceOneOpen) {
-            nextPos = getPositionFromVector(board, startPos, rowdx, 0, 2);
-            if (startPos.getRow() == 7 && this.getTeamColor().equals(ChessGame.TeamColor.BLACK)) {
-                Collection<ChessMove> movesToAdd = getStraightPawnMove(board, startPos, new ChessPosition(nextPos.getRow(), nextPos.getColumn()));
-                if (movesToAdd != null) {
-                    moves.addAll(movesToAdd);
-                }
-            }
-            if (startPos.getRow() == 2 && this.getTeamColor().equals(ChessGame.TeamColor.WHITE)) {
-                Collection<ChessMove> movesToAdd = getStraightPawnMove(board, startPos, new ChessPosition(nextPos.getRow(), nextPos.getColumn()));
+        if (spaceOneOpen && isPawnStartingRow(startPos.getRow())) {
+            ChessPosition doubleStep =
+                    getPositionFromVector(board, startPos, rowdx, 0, 2);
+
+            if (isInBounds(doubleStep)) {
+                Collection<ChessMove> movesToAdd =
+                        getStraightPawnMove(board, startPos, doubleStep);
+
                 if (movesToAdd != null) {
                     moves.addAll(movesToAdd);
                 }
