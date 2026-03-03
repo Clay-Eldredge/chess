@@ -19,4 +19,9 @@ public class MemoryUserDAO implements UserDAO {
         users.put(userData.username(), userData);
         return userData;
     }
+
+    @Override
+    public void clearAll() {
+        users = new HashMap<>();
+    }
 }

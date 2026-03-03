@@ -21,6 +21,10 @@ public class AuthService {
     }
 
     public LoginResult login(LoginRequest loginRequest) throws DataAccessException {
+        if (loginRequest.username() == null || loginRequest.password() == null) {
+            throw new BadRequestException("Bad request");
+        }
+
         UserData user = userDAO.getUser(loginRequest.username());
 
         if (user == null || !user.password().equals(loginRequest.password())) {
@@ -35,6 +39,10 @@ public class AuthService {
     }
 
     public void logout(LogoutRequest logoutRequest) throws DataAccessException {
+        if (logoutRequest.authToken() == null) {
+            throw new UnauthorizedException("User is not authorized");
+        }
+
         AuthData authData = authDAO.getAuth(logoutRequest.authToken());
 
         if (authData == null) {

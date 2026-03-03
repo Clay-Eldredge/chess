@@ -31,4 +31,9 @@ public class MemoryAuthDAO implements AuthDAO{
             throw new DataAccessException("Auth doesn't exist.");
         }
     }
+
+    @Override
+    public void clearAll() {
+        auths = new HashMap<>();
+    }
 }

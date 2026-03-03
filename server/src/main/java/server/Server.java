@@ -4,13 +4,13 @@ import com.google.gson.Gson;
 import dataaccess.*;
 import io.javalin.*;
 import io.javalin.http.Context;
-import service.AlreadyTakenException;
-import service.AuthService;
-import service.UnauthorizedException;
-import service.UserService;
+import service.*;
+import service.requests.CreateRequest;
 import service.requests.LoginRequest;
 import service.requests.LogoutRequest;
 import service.requests.RegisterRequest;
+import service.results.CreateResult;
+import service.results.ListResult;
 import service.results.LoginResult;
 import service.results.RegisterResult;
 
@@ -31,6 +31,7 @@ public class Server {
 
         UserDAO userDAO = new MemoryUserDAO();
         AuthDAO authDAO = new MemoryAuthDAO();
+        GameDAO gameDAO = new MemoryGameDAO();
 
         Gson gson = new Gson();
 
@@ -48,6 +49,8 @@ public class Server {
                 applyException(ctx, gson, e, 403);
             } catch (DataAccessException e) {
                 applyException(ctx, gson, e, 500);
+            } catch (BadRequestException e) {
+                applyException(ctx, gson, e, 400);
             }
         });
 
@@ -65,13 +68,15 @@ public class Server {
             } catch (DataAccessException e) {
                 applyException(ctx, gson, e, 500);
             } catch (UnauthorizedException e) {
+                applyException(ctx, gson, e, 401);
+            } catch (BadRequestException e) {
                 applyException(ctx, gson, e, 400);
             }
         });
 
         // Logout
         javalin.delete("/session", ctx -> {
-            LogoutRequest logoutRequest = gson.fromJson(ctx.body(), LogoutRequest.class);
+            LogoutRequest logoutRequest = new LogoutRequest(ctx.header("authorization"));
 
             AuthService authService = new AuthService(userDAO, authDAO);
 
@@ -79,7 +84,78 @@ public class Server {
                 authService.logout(logoutRequest);
 
                 ctx.status(200);
-                ctx.result();
+                ctx.result("{}");
+            } catch (DataAccessException e) {
+                applyException(ctx, gson, e, 500);
+            } catch (UnauthorizedException e) {
+                applyException(ctx, gson, e, 401);
+            }
+        });
+
+        // Clear DB
+        javalin.delete("/db", ctx -> {
+            AuthService authService = new AuthService(userDAO, authDAO);
+            UserService userService = new UserService(userDAO, authDAO);
+            GameService gameService = new GameService(authDAO, gameDAO);
+        });
+
+        // Create game
+        javalin.post("/game", ctx -> {
+            CreateRequest createRequest = gson.fromJson(ctx.body(), CreateRequest.class);
+            String authToken = ctx.header("authorization");
+
+            GameService gameService = new GameService(authDAO, gameDAO);
+
+            try {
+                CreateResult createResult = gameService.createGame(authToken, createRequest);
+
+                ctx.status(200);
+                ctx.result(gson.toJson(createResult));
+            } catch (UnauthorizedException e) {
+                applyException(ctx, gson, e, 401);
+            } catch (BadRequestException e) {
+                applyException(ctx, gson, e, 400);
+            } catch (DataAccessException e) {
+                applyException(ctx, gson, e, 500);
+            }
+        });
+
+        // Create game
+        javalin.get("/game", ctx -> {
+            String authToken = ctx.header("authorization");
+
+            GameService gameService = new GameService(authDAO, gameDAO);
+
+            try {
+                ListResult listResult = gameService.listGames(authToken);
+
+                ctx.status(200);
+                ctx.result(gson.toJson(listResult));
+            } catch (UnauthorizedException e) {
+                applyException(ctx, gson, e, 401);
+            } catch (BadRequestException e) {
+                applyException(ctx, gson, e, 400);
+            } catch (DataAccessException e) {
+                applyException(ctx, gson, e, 500);
+            }
+        });
+
+        // Create game
+        javalin.put("/game", ctx -> {
+
+            String authToken = ctx.header("authorization");
+
+            GameService gameService = new GameService(authDAO, gameDAO);
+
+            try {
+                ListResult listResult = gameService.listGames(authToken);
+
+                ctx.status(200);
+                ctx.result(gson.toJson(listResult));
+            } catch (UnauthorizedException e) {
+                applyException(ctx, gson, e, 401);
+            } catch (BadRequestException e) {
+                applyException(ctx, gson, e, 400);
             } catch (DataAccessException e) {
                 applyException(ctx, gson, e, 500);
             }
