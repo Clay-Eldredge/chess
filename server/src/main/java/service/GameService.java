@@ -82,11 +82,12 @@ public class GameService {
         }
 
         if (joinRequest.playerColor() == ChessGame.TeamColor.BLACK
-                && (gameData.blackUsername() != null || gameData.blackUsername().isEmpty())) {
+                && gameData.blackUsername() != null) {
             throw new AlreadyTakenException("Spot is already filled");
         }
+
         if (joinRequest.playerColor() == ChessGame.TeamColor.WHITE
-                && (gameData.whiteUsername() != null || gameData.whiteUsername().isEmpty())) {
+                && gameData.whiteUsername() != null) {
             throw new AlreadyTakenException("Spot is already filled");
         }
 

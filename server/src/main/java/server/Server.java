@@ -91,9 +91,9 @@ public class Server {
 
         // Clear DB
         javalin.delete("/db", ctx -> {
-            AuthService authService = new AuthService(userDAO, authDAO);
-            UserService userService = new UserService(userDAO, authDAO);
-            GameService gameService = new GameService(authDAO, gameDAO);
+            userDAO.clearAll();
+            authDAO.clearAll();
+            gameDAO.clearAll();
         });
 
         // Create game
@@ -137,7 +137,7 @@ public class Server {
             }
         });
 
-        // Create game
+        // Join game
         javalin.put("/game", ctx -> {
             JoinRequest joinRequest = gson.fromJson(ctx.body(), JoinRequest.class);
             String authToken = ctx.header("authorization");
@@ -155,6 +155,8 @@ public class Server {
                 applyException(ctx, gson, e, 400);
             } catch (DataAccessException e) {
                 applyException(ctx, gson, e, 500);
+            } catch (AlreadyTakenException e) {
+                applyException(ctx, gson, e, 403);
             }
         });
     }

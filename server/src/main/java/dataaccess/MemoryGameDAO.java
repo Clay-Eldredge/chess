@@ -23,7 +23,7 @@ public class MemoryGameDAO implements GameDAO {
 
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
-        return games.get(gameID);
+        return games.get(Integer.toString(gameID));
     }
 
     @Override
