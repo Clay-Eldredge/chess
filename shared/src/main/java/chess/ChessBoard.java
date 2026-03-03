@@ -10,7 +10,7 @@ import java.util.Objects;
  * signature of the existing methods.
  */
 public class ChessBoard {
-    private ChessPiece[][] PiecesMatrix = new ChessPiece[8][8];
+    private ChessPiece[][] piecesMatrix = new ChessPiece[8][8];
 
     public ChessBoard() {
 
@@ -23,7 +23,7 @@ public class ChessBoard {
      * @param piece    the piece to add
      */
     public void addPiece(ChessPosition position, ChessPiece piece) {
-        this.PiecesMatrix[position.getRow()-1][position.getColumn()-1] = piece;
+        this.piecesMatrix[position.getRow()-1][position.getColumn()-1] = piece;
     }
 
     /**
@@ -34,7 +34,7 @@ public class ChessBoard {
      * position
      */
     public ChessPiece getPiece(ChessPosition position) {
-        return this.PiecesMatrix[position.getRow()-1][position.getColumn()-1];
+        return this.piecesMatrix[position.getRow()-1][position.getColumn()-1];
     }
 
 
@@ -78,7 +78,7 @@ public class ChessBoard {
      * (How the game of chess normally starts)
      */
     public void resetBoard() {
-        this.PiecesMatrix = new ChessPiece[8][8];
+        this.piecesMatrix = new ChessPiece[8][8];
 
         setupSide(ChessGame.TeamColor.WHITE);
         setupSide(ChessGame.TeamColor.BLACK);
@@ -94,11 +94,11 @@ public class ChessBoard {
             return false;
         }
 
-        return java.util.Arrays.deepEquals(this.PiecesMatrix, ((ChessBoard) obj).PiecesMatrix);
+        return java.util.Arrays.deepEquals(this.piecesMatrix, ((ChessBoard) obj).piecesMatrix);
     }
 
     @Override
     public int hashCode() {
-        return Arrays.deepHashCode(PiecesMatrix);
+        return Arrays.deepHashCode(piecesMatrix);
     }
 }
