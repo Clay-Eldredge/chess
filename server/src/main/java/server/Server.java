@@ -18,6 +18,14 @@ public class Server {
     public Server() {
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
 
+        try {
+            DatabaseManager.createDatabase();
+            MySqlDAO mySqlDAO = new MySqlDAO();
+            System.out.println("DB CREATED");
+        } catch (DataAccessException e) {
+            System.out.println("DB not created");
+        }
+
         UserDAO userDAO = new MemoryUserDAO();
         AuthDAO authDAO = new MemoryAuthDAO();
         GameDAO gameDAO = new MemoryGameDAO();
