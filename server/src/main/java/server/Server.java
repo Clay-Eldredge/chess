@@ -27,7 +27,7 @@ public class Server {
         }
 
         UserDAO userDAO = new MemoryUserDAO();
-        AuthDAO authDAO = new MemoryAuthDAO();
+        AuthDAO authDAO = new DBAuthDAO();
         GameDAO gameDAO = new MemoryGameDAO();
         Gson gson = new Gson();
 
