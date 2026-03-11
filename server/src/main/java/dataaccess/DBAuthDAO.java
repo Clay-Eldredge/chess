@@ -8,11 +8,11 @@ public class DBAuthDAO implements AuthDAO{
         String sql = "INSERT INTO auth (authToken, username) VALUES (?, ?)";
 
         try (var connection = DatabaseManager.getConnection()) {
-            try (var rs = connection.prepareStatement(sql)) {
-                rs.setString(1, authData.authToken());
-                rs.setString(2, authData.username());
+            try (var ps = connection.prepareStatement(sql)) {
+                ps.setString(1, authData.authToken());
+                ps.setString(2, authData.username());
 
-                rs.executeUpdate();
+                ps.executeUpdate();
                 return authData;
             }
         } catch (Exception e) {
@@ -22,12 +22,39 @@ public class DBAuthDAO implements AuthDAO{
 
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
-        return new AuthData("","");
+        String sql = "SELECT authToken, username FROM auth WHERE authToken=?";
+
+        try (var connection = DatabaseManager.getConnection()) {
+            try (var ps = connection.prepareStatement(sql)) {
+                ps.setString(1, authToken);
+
+                try (var rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return new AuthData(
+                                rs.getString("authToken"),
+                                rs.getString("username")
+                        );
+                    }
+                }
+                return null;
+            }
+        } catch (Exception e) {
+            throw new DataAccessException("Unable to get auth", e);
+        }
     }
 
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
+        String sql = "DELETE FROM auth WHERE authToken=?";
 
+        try (var connection = DatabaseManager.getConnection()) {
+            try (var ps = connection.prepareStatement(sql)) {
+                ps.setString(1, authToken);
+                ps.executeUpdate();
+            }
+        } catch (Exception e) {
+            throw new DataAccessException("Unable to delete auth", e);
+        }
     }
 
     @Override
