@@ -58,7 +58,15 @@ public class DBAuthDAO implements AuthDAO{
     }
 
     @Override
-    public void clearAll() {
+    public void clearAll() throws DataAccessException {
+        String sql = "TRUNCATE auth";
 
+        try (var connection = DatabaseManager.getConnection()) {
+            try (var ps = connection.prepareStatement(sql)) {
+                ps.executeUpdate();
+            }
+        } catch (Exception e) {
+            throw new DataAccessException("Unable to clear auth", e);
+        }
     }
 }
