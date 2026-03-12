@@ -26,9 +26,9 @@ public class Server {
             System.out.println("DB not created");
         }
 
-        UserDAO userDAO = new MemoryUserDAO();
+        UserDAO userDAO = new DBUserDAO();
         AuthDAO authDAO = new DBAuthDAO();
-        GameDAO gameDAO = new MemoryGameDAO();
+        GameDAO gameDAO = new DBGameDAO();
         Gson gson = new Gson();
 
         register(userDAO, authDAO, gson);

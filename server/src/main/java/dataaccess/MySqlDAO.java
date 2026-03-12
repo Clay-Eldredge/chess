@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS game (
     whiteUsername VARCHAR(50),
     blackUsername VARCHAR(50),
     gameName VARCHAR(100) NOT NULL,
-    gameState TEXT
+    game TEXT
 )
 """
             };
