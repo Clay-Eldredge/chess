@@ -92,7 +92,22 @@ public class DBGameDAO implements GameDAO{
     }
 
     public GameData updateGame(int gameID, GameData gameData) throws DataAccessException {
-        return new GameData(1,"","","",new ChessGame());
+        String sql = "UPDATE game SET whiteUsername = ?, blackUsername = ?, game = ? WHERE gameID = ?;";
+
+        try (var connection = DatabaseManager.getConnection()) {
+            try (var ps = connection.prepareStatement(sql)) {
+                ps.setString(1, gameData.whiteUsername());
+                ps.setString(2, gameData.blackUsername());
+                ps.setString(3, gson.toJson(gameData.game()));
+                ps.setInt(4, gameData.gameID());
+
+                ps.executeUpdate();
+
+                return gameData;
+            }
+        } catch (Exception e) {
+            throw new DataAccessException("Unable to update game", e);
+        }
     }
 
     public void clearAll() throws DataAccessException {
