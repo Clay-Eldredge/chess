@@ -34,7 +34,7 @@ public class Server {
         register(userDAO, authDAO, gson);
         login(userDAO, authDAO, gson);
         logout(userDAO, authDAO, gson);
-        clear(userDAO, authDAO, gameDAO);
+        clear(userDAO, authDAO, gameDAO, gson);
         createGame(authDAO, gameDAO, gson);
         listGames(authDAO, gameDAO, gson);
         joinGame(authDAO, gameDAO, gson);
@@ -97,10 +97,14 @@ public class Server {
         });
     }
 
-    private void clear(UserDAO userDAO, AuthDAO authDAO, GameDAO gameDAO) {
+    private void clear(UserDAO userDAO, AuthDAO authDAO, GameDAO gameDAO, Gson gson) {
         javalin.delete("/db", ctx -> {
             ClearService service = new ClearService(userDAO, authDAO, gameDAO);
-            service.clearAll();
+            try {
+                service.clearAll();
+            } catch (DataAccessException e) {
+                applyException(ctx, gson, e, 500);
+            }
         });
     }
 

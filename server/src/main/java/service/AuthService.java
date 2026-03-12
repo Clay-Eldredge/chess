@@ -5,6 +5,7 @@ import dataaccess.DataAccessException;
 import dataaccess.UserDAO;
 import model.AuthData;
 import model.UserData;
+import org.mindrot.jbcrypt.BCrypt;
 import service.requests.LoginRequest;
 import service.requests.LogoutRequest;
 import service.results.LoginResult;
@@ -27,7 +28,7 @@ public class AuthService {
 
         UserData user = userDAO.getUser(loginRequest.username());
 
-        if (user == null || !user.password().equals(loginRequest.password())) {
+        if (user == null || !BCrypt.checkpw(loginRequest.password(), user.password())) {
             throw new UnauthorizedException("User is not authorized");
         }
 

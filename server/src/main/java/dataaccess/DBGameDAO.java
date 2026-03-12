@@ -20,7 +20,7 @@ public class DBGameDAO implements GameDAO{
         try (var connection = DatabaseManager.getConnection()) {
             try (var ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, gameName);
-                ps.setString(2, gson.toJson(gameJson));
+                ps.setString(2, gameJson);
 
                 ps.executeUpdate();
 
@@ -93,15 +93,18 @@ public class DBGameDAO implements GameDAO{
 
     public GameData updateGame(int gameID, GameData gameData) throws DataAccessException {
         String sql = "UPDATE game SET whiteUsername = ?, blackUsername = ?, game = ? WHERE gameID = ?;";
-
         try (var connection = DatabaseManager.getConnection()) {
             try (var ps = connection.prepareStatement(sql)) {
                 ps.setString(1, gameData.whiteUsername());
                 ps.setString(2, gameData.blackUsername());
                 ps.setString(3, gson.toJson(gameData.game()));
-                ps.setInt(4, gameData.gameID());
+                ps.setInt(4, gameID);
 
-                ps.executeUpdate();
+                int rows = ps.executeUpdate();
+
+                if (rows == 0) {
+                    throw new DataAccessException("Game not found");
+                }
 
                 return gameData;
             }

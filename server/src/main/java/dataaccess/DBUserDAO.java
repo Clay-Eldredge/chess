@@ -2,6 +2,7 @@ package dataaccess;
 
 import model.AuthData;
 import model.UserData;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class DBUserDAO implements UserDAO{
     public UserData getUser(String username) throws DataAccessException {
@@ -30,10 +31,12 @@ public class DBUserDAO implements UserDAO{
     public UserData createUser(UserData userData) throws DataAccessException {
         String sql = "INSERT INTO user (username, password, email) VALUES (?, ?, ?)";
 
+        String hashedPassword = BCrypt.hashpw(userData.password(), BCrypt.gensalt());
+
         try (var connection = DatabaseManager.getConnection()) {
             try (var ps = connection.prepareStatement(sql)) {
                 ps.setString(1, userData.username());
-                ps.setString(2, userData.password());
+                ps.setString(2, hashedPassword);
                 ps.setString(3, userData.email());
 
                 ps.executeUpdate();
