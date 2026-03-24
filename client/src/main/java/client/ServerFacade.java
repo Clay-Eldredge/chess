@@ -6,6 +6,7 @@ import requests.LoginRequest;
 import requests.LogoutRequest;
 import requests.RegisterRequest;
 import results.CreateResult;
+import results.ListResult;
 import results.LoginResult;
 import results.RegisterResult;
 
@@ -42,6 +43,10 @@ public class ServerFacade {
     public CreateResult create(String gameName, String authToken) {
         var request = new CreateRequest(gameName);
         return makeRequest("POST", "/game", request, CreateResult.class, authToken);
+    }
+
+    public ListResult list(String authToken) {
+        return makeRequest("GET", "/game", null, ListResult.class, authToken);
     }
 
     private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass) {
