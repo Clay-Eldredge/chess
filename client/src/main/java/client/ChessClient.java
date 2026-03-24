@@ -1,10 +1,15 @@
 package client;
 
+import results.LoginResult;
+import results.RegisterResult;
+
 import java.util.Arrays;
 
 public class ChessClient {
     private final ServerFacade server;
     private final String serverUrl;
+    private String authToken;
+    private String username;
     private State state = State.LOGGED_OUT;
 
     public ChessClient(String serverUrl) {
@@ -53,13 +58,24 @@ HELP!!! YOU'RE LOGGED IN!!!
 
     public String login(String[] params) {
         if (params.length >= 2) {
-
+            LoginResult result = server.login(params[0], params[1]);
+            this.state = State.LOGGED_IN;
+            this.authToken = result.authToken();
+            this.username = result.username();
+            return "Successfully logged in as " + this.username;
         }
         throw new ResponseException(400, "Expected: <username> <password>");
     }
 
     public String register(String[] params) {
-        return null;
+        if (params.length >= 3) {
+            RegisterResult result = server.register(params[0], params[1], params[2]);
+            this.state = State.LOGGED_IN;
+            this.authToken = result.authToken();
+            this.username = result.username();
+            return "Successfully registered as " + this.username;
+        }
+        throw new ResponseException(400, "Expected: <username> <password> <email>");
     }
 
     public String logout() {

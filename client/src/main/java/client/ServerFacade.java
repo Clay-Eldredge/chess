@@ -1,6 +1,7 @@
 package client;
 
 import com.google.gson.Gson;
+import requests.LoginRequest;
 import requests.RegisterRequest;
 import results.LoginResult;
 import results.RegisterResult;
@@ -25,9 +26,9 @@ public class ServerFacade {
         return makeRequest("POST", "/user", request, RegisterResult.class);
     }
 
-    public LoginResult login() {
-
-        return null;
+    public LoginResult login(String username, String password) {
+        var request = new LoginRequest(username, password);
+        return makeRequest("POST", "/session", request, LoginResult.class);
     }
 
     private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass) {
@@ -69,12 +70,10 @@ public class ServerFacade {
 
     private static <T> T readBody(HttpURLConnection http, Class<T> responseClass) throws IOException {
         T response = null;
-        if (http.getContentLength() < 0) {
-            try (InputStream respBody = http.getInputStream()) {
-                InputStreamReader reader = new InputStreamReader(respBody);
-                if (responseClass != null) {
-                    response = new Gson().fromJson(reader, responseClass);
-                }
+        try (InputStream respBody = http.getInputStream()) {
+            InputStreamReader reader = new InputStreamReader(respBody);
+            if (responseClass != null) {
+                response = new Gson().fromJson(reader, responseClass);
             }
         }
         return response;

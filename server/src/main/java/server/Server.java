@@ -56,6 +56,7 @@ public class Server {
             } catch (AlreadyTakenException e) {
                 applyException(ctx, gson, e, 403);
             } catch (DataAccessException e) {
+                e.printStackTrace();
                 applyException(ctx, gson, e, 500);
             } catch (BadRequestException e) {
                 applyException(ctx, gson, e, 400);
