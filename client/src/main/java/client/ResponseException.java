@@ -1,7 +1,9 @@
 package client;
 
 public class ResponseException extends RuntimeException {
-    public ResponseException(String message) {
+    private int status;
+    public ResponseException(int status, String message) {
         super(message);
+        this.status = status;
     }
 }

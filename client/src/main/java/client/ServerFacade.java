@@ -1,7 +1,7 @@
 package client;
 
 import com.google.gson.Gson;
-import model.AuthData;
+import requests.RegisterRequest;
 import results.LoginResult;
 import results.RegisterResult;
 
@@ -16,13 +16,13 @@ import java.net.URL;
 public class ServerFacade {
     private final String serverUrl;
 
-    public ServerFacade(int port) {
-        this.serverUrl = "http://localhost:" + port;
+    public ServerFacade(String url) {
+        this.serverUrl = url;
     }
 
-    public RegisterResult register() {
-
-        return null;
+    public RegisterResult register(String username, String password, String email) {
+        var request = new RegisterRequest(username, password, email);
+        return makeRequest("POST", "/user", request, RegisterResult.class);
     }
 
     public LoginResult login() {
@@ -44,6 +44,10 @@ public class ServerFacade {
         } catch (Exception e) {
             throw new ResponseException(500, e.getMessage());
         }
+    }
+
+    private boolean isSuccessful(int status) {
+        return status >= 200 && status < 300;
     }
 
     private void throwIfNotSuccessful(HttpURLConnection http) throws IOException, ResponseException {
