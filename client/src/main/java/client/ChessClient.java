@@ -1,5 +1,6 @@
 package client;
 
+import results.CreateResult;
 import results.LoginResult;
 import results.RegisterResult;
 import ui.EscapeSequences;
@@ -88,7 +89,11 @@ HELP!!! YOU'RE LOGGED IN!!!
     }
 
     public String create(String[] params) {
-        return null;
+        if (params.length >= 1) {
+            CreateResult result = server.create(params[0], authToken);
+            return "Successfully created new game: " + params[0];
+        }
+        throw new ResponseException(400, "Expected: <name>");
     }
 
     public String list() {

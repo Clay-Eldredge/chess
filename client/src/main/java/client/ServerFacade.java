@@ -1,9 +1,11 @@
 package client;
 
 import com.google.gson.Gson;
+import requests.CreateRequest;
 import requests.LoginRequest;
 import requests.LogoutRequest;
 import requests.RegisterRequest;
+import results.CreateResult;
 import results.LoginResult;
 import results.RegisterResult;
 
@@ -35,6 +37,11 @@ public class ServerFacade {
     public void logout(String authToken) {
         var request = new LogoutRequest(authToken);
         makeRequest("DELETE", "/session", null, null, authToken);
+    }
+
+    public CreateResult create(String gameName, String authToken) {
+        var request = new CreateRequest(gameName);
+        return makeRequest("POST", "/game", request, CreateResult.class, authToken);
     }
 
     private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass) {
