@@ -1,10 +1,8 @@
 package client;
 
+import chess.ChessGame;
 import com.google.gson.Gson;
-import requests.CreateRequest;
-import requests.LoginRequest;
-import requests.LogoutRequest;
-import requests.RegisterRequest;
+import requests.*;
 import results.CreateResult;
 import results.ListResult;
 import results.LoginResult;
@@ -47,6 +45,11 @@ public class ServerFacade {
 
     public ListResult list(String authToken) {
         return makeRequest("GET", "/game", null, ListResult.class, authToken);
+    }
+
+    public void join(int gameId, ChessGame.TeamColor color, String authToken) {
+        var request = new JoinRequest(color, gameId);
+        makeRequest("PUT", "/game", request, null, authToken);
     }
 
     private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass) {

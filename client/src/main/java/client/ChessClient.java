@@ -1,5 +1,6 @@
 package client;
 
+import chess.ChessGame;
 import model.GameData;
 import results.*;
 import ui.EscapeSequences;
@@ -141,7 +142,38 @@ HELP!!! YOU'RE LOGGED IN!!!
     }
 
     public String join(String[] params) {
-        return null;
+        if (state != State.LOGGED_IN) {
+            throw new ResponseException(400, "You must log in first");
+        }
+
+        if (params.length < 2) {
+            throw new ResponseException(400, "Expected: <game number> <WHITE|BLACK>");
+        }
+
+        int index;
+        try {
+            index = Integer.parseInt(params[0]) - 1;
+        } catch (NumberFormatException e) {
+            throw new ResponseException(400, "Game number must be an integer");
+        }
+
+        if (index < 0 || index >= lastListedGames.size()) {
+            throw new ResponseException(400, "Invalid game number");
+        }
+
+        var game = lastListedGames.get(index);
+
+        ChessGame.TeamColor color;
+
+        try {
+            color = ChessGame.TeamColor.valueOf(params[1].toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseException(400, "Color must be WHITE or BLACK");
+        }
+
+        server.join(game.gameID(), color, authToken);
+
+        return "Joined game " + game.gameName() + " as " + color;
     }
 
     public String observe(String[] params) {
