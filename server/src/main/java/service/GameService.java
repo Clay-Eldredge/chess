@@ -4,14 +4,13 @@ import chess.ChessGame;
 import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
-import dataaccess.UserDAO;
 import model.AuthData;
 import model.GameData;
-import service.requests.CreateRequest;
-import service.requests.JoinRequest;
-import service.results.CreateResult;
-import service.results.GameInfo;
-import service.results.ListResult;
+import requests.CreateRequest;
+import requests.JoinRequest;
+import results.CreateResult;
+import results.GameInfo;
+import results.ListResult;
 
 import java.util.Arrays;
 

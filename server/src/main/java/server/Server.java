@@ -4,12 +4,12 @@ import com.google.gson.Gson;
 import dataaccess.*;
 import io.javalin.*;
 import io.javalin.http.Context;
+import requests.*;
 import service.*;
-import service.requests.*;
-import service.results.CreateResult;
-import service.results.ListResult;
-import service.results.LoginResult;
-import service.results.RegisterResult;
+import results.CreateResult;
+import results.ListResult;
+import results.LoginResult;
+import results.RegisterResult;
 
 public class Server {
 
