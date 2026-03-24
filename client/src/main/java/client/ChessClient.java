@@ -2,6 +2,7 @@ package client;
 
 import results.LoginResult;
 import results.RegisterResult;
+import ui.EscapeSequences;
 
 import java.util.Arrays;
 
@@ -19,7 +20,7 @@ public class ChessClient {
     }
 
     public void printPrompt() {
-        System.out.println("PROMPT");
+        System.out.print("\n" + EscapeSequences.RESET_TEXT_COLOR + ">>> " + EscapeSequences.SET_TEXT_COLOR_GREEN);
     }
 
     public String eval(String input) {
@@ -79,7 +80,11 @@ HELP!!! YOU'RE LOGGED IN!!!
     }
 
     public String logout() {
-        return null;
+        server.logout(authToken);
+        this.state = State.LOGGED_OUT;
+        this.authToken = null;
+        this.username = null;
+        return "Successfully logged out";
     }
 
     public String create(String[] params) {

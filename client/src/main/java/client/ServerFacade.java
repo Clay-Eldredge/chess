@@ -2,6 +2,7 @@ package client;
 
 import com.google.gson.Gson;
 import requests.LoginRequest;
+import requests.LogoutRequest;
 import requests.RegisterRequest;
 import results.LoginResult;
 import results.RegisterResult;
@@ -31,12 +32,24 @@ public class ServerFacade {
         return makeRequest("POST", "/session", request, LoginResult.class);
     }
 
+    public void logout(String authToken) {
+        var request = new LogoutRequest(authToken);
+        makeRequest("DELETE", "/session", null, null, authToken);
+    }
+
     private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass) {
+        return makeRequest(method, path, request, responseClass, null);
+    }
+    private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass, String authToken) {
         try{
             URL url = (new URI(serverUrl + path)).toURL();
             HttpURLConnection http = (HttpURLConnection) url.openConnection();
             http.setRequestMethod(method);
             http.setDoOutput(true);
+
+            if (authToken != null) {
+                http.addRequestProperty("authorization", authToken);
+            }
 
             writeBody(request, http);
             http.connect();
