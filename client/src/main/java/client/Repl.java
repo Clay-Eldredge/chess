@@ -4,48 +4,35 @@ import chess.ChessGame;
 import chess.ChessPiece;
 import model.AuthData;
 import model.UserData;
+import ui.EscapeSequences;
 
 import java.util.Scanner;
 
 public class Repl {
-    private final ClientMain client;
+    private final ChessClient client;
+    private final String BLUE = EscapeSequences.SET_TEXT_COLOR_BLUE;
 
     public Repl(String serverURl) {
-        client =
+        client = new ChessClient(serverURl);
     }
 
     public void run() {
         var piece = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN);
         System.out.println("♕ 240 Chess Client: " + piece);
-        System.out.println(client);
-
-        AuthData authData = null;
-        UserData userData = null;
-        boolean loggedIn = false;
+        System.out.println(client.help());
 
         Scanner scanner = new Scanner(System.in);
         var result = "";
         while (!result.equals("quit")) {
+            client.printPrompt();
             String line = scanner.nextLine();
 
-            String input = scanner.nextLine().trim();
-            String[] tokens = input.split("\\s+");
-            String cmd = tokens[0].toLowerCase();
-
-            switch (cmd) {
-                case "help": {
-                    System.out.println("HELP TEXT");
-                    break;
-                } case "quit": {
-                    return;
-                } case "login": {
-                    break;
-                } case "register": {
-                    break;
-                } default: {
-                    System.out.println("Command \"" + cmd + "\" does not exist. Type \"help\"");
-                    break;
-                }
+            try {
+                result = client.eval(line);
+                System.out.println(BLUE + result);
+            } catch (Throwable e) {
+                var msg = e.toString();
+                System.out.println(msg);
             }
         }
     }
