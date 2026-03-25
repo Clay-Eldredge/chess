@@ -16,6 +16,7 @@ public class ChessClient {
     private String username;
     private List<GameInfo> lastListedGames = new ArrayList<>();
     private State state = State.LOGGED_OUT;
+    private PaintBoard paintBoard = new PaintBoard();
 
     public ChessClient(String serverUrl) {
         server = new ServerFacade(serverUrl);
@@ -49,7 +50,7 @@ public class ChessClient {
     }
 
     public String help() {
-        if (getState().equals(State.LOGGED_OUT)) {
+        if (this.state.equals(State.LOGGED_OUT)) {
             return """
 Help text appears in many forms...
 Like this one.
@@ -171,16 +172,35 @@ HELP!!! YOU'RE LOGGED IN!!!
             throw new ResponseException(400, "Color must be WHITE or BLACK");
         }
 
+        if ((game.blackUsername()!=null && color.equals(ChessGame.TeamColor.BLACK))
+            ||(game.whiteUsername()!=null && color.equals(ChessGame.TeamColor.WHITE))) {
+            throw new ResponseException(400, "Color already taken!");
+        }
+
         server.join(game.gameID(), color, authToken);
+
+        paintBoard.paint(new ChessGame(), color);
 
         return "Joined game " + game.gameName() + " as " + color;
     }
 
     public String observe(String[] params) {
-        return null;
-    }
+        if (params.length < 1) {
+            throw new ResponseException(400, "Expected: <game number>");
+        }
 
-    public State getState() {
-        return state;
+        int index = Integer.parseInt(params[0]) - 1;
+
+        if (index < 0 || index >= lastListedGames.size()) {
+            throw new ResponseException(400, "Invalid game number");
+        }
+
+        var game = lastListedGames.get(index);
+
+        server.list(authToken);
+
+        paintBoard.paint(new ChessGame(), ChessGame.TeamColor.WHITE);
+
+        return "Observing game " + game.gameName();
     }
 }
