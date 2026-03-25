@@ -2,15 +2,13 @@ package client;
 
 import chess.ChessGame;
 import chess.ChessPiece;
-import model.AuthData;
-import model.UserData;
 import ui.EscapeSequences;
 
 import java.util.Scanner;
 
 public class Repl {
     private final ChessClient client;
-    private final String BLUE = EscapeSequences.SET_TEXT_COLOR_BLUE;
+    private static final String BLUE = EscapeSequences.SET_TEXT_COLOR_BLUE;
 
     public Repl(String serverURl) {
         client = new ChessClient(serverURl);
