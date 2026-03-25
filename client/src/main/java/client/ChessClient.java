@@ -30,7 +30,7 @@ public class ChessClient {
 
     public String eval(String input) {
         try {
-            String[] tokens = input.toLowerCase().split(" ");
+            String[] tokens = input.trim().split("\\s+");
             String cmd = (tokens.length > 0) ? tokens[0] : "help";
             String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
             return switch (cmd) {
@@ -52,12 +52,20 @@ public class ChessClient {
     public String help() {
         if (this.state.equals(State.LOGGED_OUT)) {
             return """
-Help text appears in many forms...
-Like this one.
+register <username> <password> <email> - to create an account
+login <username> <password> - to play chess
+quit - playing chess
+help - see commands list
                     """;
         } else {
             return """
-HELP!!! YOU'RE LOGGED IN!!!
+create <name> - create a game
+list - see all games
+join <number> [white|black] - play chess
+observe <number> - watch a game
+logout - when you are done
+quit - playing chess
+help - see commands list
                     """;
         }
     }
@@ -188,8 +196,16 @@ HELP!!! YOU'RE LOGGED IN!!!
         if (params.length < 1) {
             throw new ResponseException(400, "Expected: <game number>");
         }
+        if (state != State.LOGGED_IN) {
+            throw new ResponseException(400, "You must log in first");
+        }
 
-        int index = Integer.parseInt(params[0]) - 1;
+        int index;
+        try {
+            index = Integer.parseInt(params[0]) - 1;
+        } catch (NumberFormatException e) {
+            throw new ResponseException(400, "Game number must be an integer");
+        }
 
         if (index < 0 || index >= lastListedGames.size()) {
             throw new ResponseException(400, "Invalid game number");
