@@ -10,6 +10,7 @@ import results.CreateResult;
 import results.ListResult;
 import results.LoginResult;
 import results.RegisterResult;
+import websocket.commands.UserGameCommand;
 
 public class Server {
 
@@ -38,11 +39,43 @@ public class Server {
         createGame(authDAO, gameDAO, gson);
         listGames(authDAO, gameDAO, gson);
         joinGame(authDAO, gameDAO, gson);
+        ws(gson);
     }
 
     private void applyException(Context ctx, Gson gson, Exception e, int statusCode) {
         ctx.status(statusCode);
         ctx.result(gson.toJson(new ErrorResponse("Error: " + e.getMessage())));
+    }
+
+    private void ws(Gson gson) {
+        javalin.ws("/ws", ws -> {
+            ws.onConnect(ctx -> {
+                ctx.enableAutomaticPings();
+                System.out.println("Connected");
+            });
+
+            ws.onMessage(ctx -> {
+                System.out.println("Message");
+
+                String json = ctx.message();
+
+                UserGameCommand command = gson.fromJson(json, UserGameCommand.class);
+
+                if (command.getCommandType().equals(UserGameCommand.CommandType.CONNECT)) {
+                    System.out.println("CONNECT");
+                } else if (command.getCommandType().equals(UserGameCommand.CommandType.MAKE_MOVE)) {
+                    System.out.println("MAKE MOVE");
+                } else if (command.getCommandType().equals(UserGameCommand.CommandType.RESIGN)) {
+                    System.out.println("RESIGN");
+                } else if (command.getCommandType().equals(UserGameCommand.CommandType.LEAVE)) {
+                    System.out.println("LEAVE");
+                }
+            });
+
+            ws.onClose(ctx -> {
+                System.out.println("Closed");
+            });
+        });
     }
 
     private void register(UserDAO userDAO, AuthDAO authDAO, Gson gson) {
