@@ -41,6 +41,11 @@ public class ChessClient {
                 case "list" -> list();
                 case "join" -> join(params);
                 case "observe" -> observe(params);
+                case "move" -> move(params);
+                case "highlight" -> highlight(params);
+                case "redraw" -> redraw(params);
+                case "resign" -> resign(params);
+                case "leave" -> leave(params);
                 case "quit" -> "quit";
                 default -> help();
             };
@@ -57,7 +62,7 @@ login <username> <password> - to play chess
 quit - playing chess
 help - see commands list
                     """;
-        } else {
+        } else if (this.state.equals(State.LOGGED_IN)) {
             return """
 create <name> - create a game
 list - see all games
@@ -66,6 +71,26 @@ observe <number> - watch a game
 logout - when you are done
 quit - playing chess
 help - see commands list
+                    """;
+        } else if (this.state.equals(State.IN_GAME)) {
+            return """
+redraw - paint the board
+leave - exit this game
+move <letter coordinate 1> <number coordinate 1> <letter coordinate 2> <number coordinate 2> - move a piece
+resign - forfeit the game
+highlight <letter coordinate> <number coordinate> - show the legal moves for a piece
+help - see commands list
+                    """;
+        } else if (this.state.equals(State.OBSERVING_GAME)) {
+            return """
+redraw - paint the board
+leave - exit this game
+highlight <letter coordinate> <number coordinate> - show the legal moves for a piece
+help - see commands list
+                    """;
+        } else {
+            return """
+client has no state
                     """;
         }
     }
@@ -187,6 +212,8 @@ help - see commands list
 
         server.join(game.gameID(), color, authToken);
 
+        state = State.IN_GAME;
+
         paintBoard.paint(new ChessGame(), color);
 
         return "Joined game " + game.gameName() + " as " + color;
@@ -214,6 +241,8 @@ help - see commands list
         var game = lastListedGames.get(index);
 
         server.list(authToken);
+
+        state = State.OBSERVING_GAME;
 
         paintBoard.paint(new ChessGame(), ChessGame.TeamColor.WHITE);
 
