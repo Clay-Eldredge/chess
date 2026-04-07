@@ -100,4 +100,14 @@ public class GameService {
 
         gameDAO.updateGame(gameData.gameID(), updatedGame);
     }
+
+    public GameData getGameData(int gameId) throws DataAccessException {
+        GameData gameData = gameDAO.getGame(gameId);
+
+        if (gameData == null) {
+            throw new DataAccessException("Game not found for ID: " + gameId);
+        }
+
+        return gameData;
+    }
 }
