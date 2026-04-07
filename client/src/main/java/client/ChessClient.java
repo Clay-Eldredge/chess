@@ -25,7 +25,7 @@ public class ChessClient {
     }
 
     public void printPrompt() {
-        System.out.print("\n" + EscapeSequences.RESET_TEXT_COLOR + ">>> " + EscapeSequences.SET_TEXT_COLOR_GREEN);
+        System.out.print(EscapeSequences.RESET_TEXT_COLOR + ">>> " + EscapeSequences.SET_TEXT_COLOR_GREEN);
     }
 
     public String eval(String input) {
@@ -74,7 +74,7 @@ help - see commands list
         if (state != State.LOGGED_OUT) {
             throw new ResponseException(400, "Already logged in!");
         }
-        if (params.length >= 2) {
+        if (params.length == 2) {
             LoginResult result = server.login(params[0], params[1]);
             this.state = State.LOGGED_IN;
             this.authToken = result.authToken();
@@ -88,7 +88,7 @@ help - see commands list
         if (state != State.LOGGED_OUT) {
             throw new ResponseException(400, "Already logged in!");
         }
-        if (params.length >= 3) {
+        if (params.length == 3) {
             RegisterResult result = server.register(params[0], params[1], params[2]);
             this.state = State.LOGGED_IN;
             this.authToken = result.authToken();
@@ -113,7 +113,7 @@ help - see commands list
         if (state != State.LOGGED_IN) {
             throw new ResponseException(400, "You must log in first");
         }
-        if (params.length >= 1) {
+        if (params.length == 1) {
             CreateResult result = server.create(params[0], authToken);
             return "Successfully created new game: " + params[0];
         }
@@ -155,7 +155,7 @@ help - see commands list
             throw new ResponseException(400, "You must log in first");
         }
 
-        if (params.length < 2) {
+        if (params.length != 2) {
             throw new ResponseException(400, "Expected: <game number> <WHITE|BLACK>");
         }
 
@@ -193,7 +193,7 @@ help - see commands list
     }
 
     public String observe(String[] params) {
-        if (params.length < 1) {
+        if (params.length != 1) {
             throw new ResponseException(400, "Expected: <game number>");
         }
         if (state != State.LOGGED_IN) {
@@ -218,5 +218,63 @@ help - see commands list
         paintBoard.paint(new ChessGame(), ChessGame.TeamColor.WHITE);
 
         return "Observing game " + game.gameName();
+    }
+
+    public String redraw(String[] params) {
+        if (params.length != 0) {
+            throw new ResponseException(400, "Expected no args");
+        }
+        if (state != State.IN_GAME && state != State.OBSERVING_GAME) {
+            throw new ResponseException(400, "You must be observing or playing a game");
+        }
+
+        return "string";
+    }
+
+    public String leave(String[] params) {
+        if (params.length != 0) {
+            throw new ResponseException(400, "Expected no args");
+        }
+        if (state != State.IN_GAME && state != State.OBSERVING_GAME) {
+            throw new ResponseException(400, "You must be observing or playing a game");
+        }
+
+
+        state = State.LOGGED_IN;
+
+        return "string";
+    }
+
+    public String move(String[] params) {
+        if (params.length != 1) {
+            throw new ResponseException(400, "Expected no args");
+        }
+        if (state != State.IN_GAME && state != State.OBSERVING_GAME) {
+            throw new ResponseException(400, "You must be observing or playing a game");
+        }
+
+        return "string";
+    }
+
+    public String resign(String[] params) {
+        if (params.length != 0) {
+            throw new ResponseException(400, "Expected no args");
+        }
+        if (state != State.IN_GAME) {
+            throw new ResponseException(400, "You must be playing a game");
+        }
+
+        return "string";
+    }
+
+    public String highlight(String[] params) {
+        if (params.length != 2) {
+            throw new ResponseException(400, "Expected: <letter coordinate> <number coordinate>");
+        }
+        if (state != State.IN_GAME && state != State.OBSERVING_GAME) {
+            throw new ResponseException(400, "You must be observing or playing a game");
+        }
+
+        return "string";
     }
 }

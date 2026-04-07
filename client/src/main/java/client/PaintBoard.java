@@ -31,8 +31,8 @@ public class PaintBoard {
                 boolean isLight = (row + col) % 2 == 0;
 
                 String bgColor = isLight
-                        ? EscapeSequences.SET_BG_COLOR_LIGHT_GREY
-                        : EscapeSequences.SET_BG_COLOR_DARK_GREY;
+                        ? EscapeSequences.SET_BG_COLOR_DARK_GREY
+                        : EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
 
                 System.out.print(bgColor);
 
