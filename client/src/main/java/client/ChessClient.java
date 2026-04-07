@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import model.GameData;
 import results.*;
 import ui.EscapeSequences;
+import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 
 import java.util.ArrayList;
@@ -52,7 +53,7 @@ public class ChessClient {
 
     }
 
-    public void updateCurrentGame(String msg) {
+    public void parseWebsocketMessage(String msg) {
         Gson gson = new Gson();
         // UPDATE GAME TODO
 
@@ -250,10 +251,7 @@ client has no state
 
         openWebSocketConnection(currentGameId);
 
-        ws.setMessageListener(msg -> {
-            this.updateCurrentGame(msg);
-            paintBoard.paint(currentGame, color);
-        });
+        ws.setMessageListener(this::parseWebsocketMessage);
 
         state = State.IN_GAME;
 
@@ -284,6 +282,13 @@ client has no state
         var game = lastListedGames.get(index);
 
         server.list(authToken);
+
+        this.currentGameId = game.gameID();
+        this.currentGame = new ChessGame();
+
+        openWebSocketConnection(currentGameId);
+
+        ws.setMessageListener(this::parseWebsocketMessage);
 
         state = State.OBSERVING_GAME;
 
@@ -318,14 +323,31 @@ client has no state
     }
 
     public String move(String[] params) {
-        if (params.length != 1) {
-            throw new ResponseException(400, "Expected no args");
+        if (params.length != 4) {
+            throw new ResponseException(400, "Expected <letter coordinate 1> <number coordinate 1> <letter coordinate 2> <number coordinate 2>");
         }
-        if (state != State.IN_GAME && state != State.OBSERVING_GAME) {
+        if (state != State.IN_GAME) {
             throw new ResponseException(400, "You must be observing or playing a game");
         }
 
-        return "string";
+        String from = params[0] + params[1];
+        String to = params[2] + params[3];
+
+        MakeMoveCommand cmd = new MakeMoveCommand(
+                authToken,
+                currentGameId,
+                from,
+                to
+        );
+
+        try {
+            ws.send(cmd);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Failed to send move";
+        }
+
+        return "Move sent: " + from + " -> " + to;
     }
 
     public String resign(String[] params) {
