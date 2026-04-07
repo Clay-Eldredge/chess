@@ -1,9 +1,11 @@
 package client;
 
 import chess.ChessGame;
+import com.google.gson.Gson;
 import model.GameData;
 import results.*;
 import ui.EscapeSequences;
+import websocket.commands.UserGameCommand;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,6 +18,10 @@ public class ChessClient {
     private String username;
     private List<GameInfo> lastListedGames = new ArrayList<>();
     private State state = State.LOGGED_OUT;
+    private WebSocketClient ws;
+    private int currentGameId;
+    private ChessGame.TeamColor myColor;
+    private ChessGame currentGame;
     private PaintBoard paintBoard = new PaintBoard();
 
     public ChessClient(String serverUrl) {
@@ -26,6 +32,31 @@ public class ChessClient {
 
     public void printPrompt() {
         System.out.print(EscapeSequences.RESET_TEXT_COLOR + ">>> " + EscapeSequences.SET_TEXT_COLOR_GREEN);
+    }
+
+    public void openWebSocketConnection(int gameId) {
+        try {
+            // open websocket connection
+            ws = new WebSocketClient("ws://localhost:8080/ws");
+
+            // send the initial CONNECT command
+            UserGameCommand connect = new UserGameCommand(
+                    UserGameCommand.CommandType.CONNECT,
+                    authToken,
+                    gameId
+            );
+            ws.send(connect);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void updateCurrentGame(String msg) {
+        Gson gson = new Gson();
+        // UPDATE GAME TODO
+
+        paintBoard.paint(currentGame, myColor);
     }
 
     public String eval(String input) {
@@ -210,7 +241,19 @@ client has no state
             throw new ResponseException(400, "Color already taken!");
         }
 
-        server.join(game.gameID(), color, authToken);
+        int currentGameId = game.gameID();
+
+        server.join(currentGameId, color, authToken);
+
+        this.currentGameId = game.gameID();
+        this.currentGame = new ChessGame();
+
+        openWebSocketConnection(currentGameId);
+
+        ws.setMessageListener(msg -> {
+            this.updateCurrentGame(msg);
+            paintBoard.paint(currentGame, color);
+        });
 
         state = State.IN_GAME;
 

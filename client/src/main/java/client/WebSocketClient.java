@@ -7,16 +7,15 @@ import java.net.URI;
 
 public class WebSocketClient extends Endpoint {
     public Session session;
+    private java.util.function.Consumer<String> messageListener;
     private final Gson gson = new Gson();
 
     public WebSocketClient(String url) throws Exception {
         URI uri = new URI(url);
         WebSocketContainer container = ContainerProvider.getWebSocketContainer();
 
-        // connect to server
         this.session = container.connectToServer(this, uri);
 
-        // listen for messages
         this.session.addMessageHandler((MessageHandler.Whole<String>) this::onMessage);
     }
 
@@ -34,6 +33,13 @@ public class WebSocketClient extends Endpoint {
 
     // handle incoming messages
     private void onMessage(String json) {
-        System.out.println("Received: " + json);
+        System.out.println("Received: " + json); // optional debug
+        if (messageListener != null) {
+            messageListener.accept(json); // forward to ChessClient
+        }
+    }
+
+    public void setMessageListener(java.util.function.Consumer<String> listener) {
+        this.messageListener = listener;
     }
 }
