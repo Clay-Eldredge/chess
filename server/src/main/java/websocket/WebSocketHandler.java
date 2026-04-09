@@ -94,7 +94,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void connect(WsMessageContext ctx, UserGameCommand cmd) throws Exception {
         RequestContext req = authenticateAndGetGame(ctx, cmd);
-        if (req == null) return;
+        if (req == null){
+            return;
+        }
 
         String username = req.username;
         int gameId = req.gameId;
@@ -129,7 +131,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void makeMove(WsMessageContext ctx, MakeMoveCommand cmd) throws Exception {
         RequestContext req = authenticateAndGetGame(ctx, cmd);
-        if (req == null) return;
+        if (req == null) {
+            return;
+        }
 
         String username = req.username;
         int gameId = req.gameId;
@@ -189,7 +193,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void resign(WsMessageContext ctx, UserGameCommand cmd) throws Exception {
         RequestContext req = authenticateAndGetGame(ctx, cmd);
-        if (req == null) return;
+        if (req == null) {
+            return;
+        }
 
         var game = req.gameData.game();
 
@@ -215,7 +221,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void leave(WsMessageContext ctx, UserGameCommand cmd) throws Exception {
         RequestContext req = authenticateAndGetGame(ctx, cmd);
-        if (req == null) return;
+        if (req == null){
+            return;
+        }
 
         String white = req.gameData.whiteUsername();
         String black = req.gameData.blackUsername();
