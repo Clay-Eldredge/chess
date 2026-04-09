@@ -7,6 +7,7 @@ import dataaccess.GameDAO;
 import io.javalin.websocket.*;
 import model.AuthData;
 import model.GameData;
+import org.glassfish.tyrus.core.RequestContext;
 import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 import websocket.messages.*;
@@ -67,17 +68,38 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         }
     }
 
-    private void connect(WsMessageContext ctx, UserGameCommand cmd) throws Exception {
+    private static class RequestContext {
+        String username;
+        int gameId;
+        GameData gameData;
+
+        RequestContext(String username, int gameId, GameData gameData) {
+            this.username = username;
+            this.gameId = gameId;
+            this.gameData = gameData;
+        }
+    }
+
+    private RequestContext authenticateAndGetGame(WsMessageContext ctx, UserGameCommand cmd) throws Exception {
         AuthData auth = authDAO.getAuth(cmd.getAuthToken());
         if (auth == null) {
             sendError(ctx, "unauthorized");
-            return;
+            return null;
         }
 
-        String username = auth.username();
         int gameId = cmd.getGameID();
+        GameData gameData = gameDAO.getGame(gameId);
 
-        var gameData = gameDAO.getGame(gameId);
+        return new RequestContext(auth.username(), gameId, gameData);
+    }
+
+    private void connect(WsMessageContext ctx, UserGameCommand cmd) throws Exception {
+        RequestContext req = authenticateAndGetGame(ctx, cmd);
+        if (req == null) return;
+
+        String username = req.username;
+        int gameId = req.gameId;
+        var gameData = req.gameData;
 
         String white = gameData.whiteUsername();
         String black = gameData.blackUsername();
@@ -107,16 +129,12 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     }
 
     private void makeMove(WsMessageContext ctx, MakeMoveCommand cmd) throws Exception {
-        AuthData auth = authDAO.getAuth(cmd.getAuthToken());
-        if (auth == null) {
-            sendError(ctx, "unauthorized");
-            return;
-        }
+        RequestContext req = authenticateAndGetGame(ctx, cmd);
+        if (req == null) return;
 
-        String username = auth.username();
-        int gameId = cmd.getGameID();
-
-        var gameData = gameDAO.getGame(gameId);
+        String username = req.username;
+        int gameId = req.gameId;
+        var gameData = req.gameData;
         var game = gameData.game();
 
         if (game.isGameEnded()) {
@@ -171,77 +189,62 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     }
 
     private void resign(WsMessageContext ctx, UserGameCommand cmd) throws Exception {
-        AuthData auth = authDAO.getAuth(cmd.getAuthToken());
-        if (auth == null) {
-            sendError(ctx, "unauthorized");
-            return;
-        }
+        RequestContext req = authenticateAndGetGame(ctx, cmd);
+        if (req == null) return;
 
-        String username = auth.username();
-        int gameId = cmd.getGameID();
-
-        var gameData = gameDAO.getGame(gameId);
-        var game = gameData.game();
+        var game = req.gameData.game();
 
         if (game.isGameEnded()) {
             sendError(ctx, "game already over");
             return;
         }
 
-        String white = gameData.whiteUsername();
-        String black = gameData.blackUsername();
+        String white = req.gameData.whiteUsername();
+        String black = req.gameData.blackUsername();
 
-        if (!username.equals(white) && !username.equals(black)) {
+        if (!req.username.equals(white) && !req.username.equals(black)) {
             sendError(ctx, "observers cannot resign");
             return;
         }
 
         game.setGameEnded();
-        gameDAO.updateGame(gameId, gameData);
+        gameDAO.updateGame(req.gameId, req.gameData);
 
-        connections.broadcast(gameId, null,
-                new NotificationMessage(username + " resigned"));
+        connections.broadcast(req.gameId, null,
+                new NotificationMessage(req.username + " resigned"));
     }
 
     private void leave(WsMessageContext ctx, UserGameCommand cmd) throws Exception {
-        AuthData auth = authDAO.getAuth(cmd.getAuthToken());
-        if (auth == null) {
-            sendError(ctx, "unauthorized");
-            return;
-        }
+        RequestContext req = authenticateAndGetGame(ctx, cmd);
+        if (req == null) return;
 
-        String username = auth.username();
-        int gameId = cmd.getGameID();
-
-        var gameData = gameDAO.getGame(gameId);
-
-        String white = gameData.whiteUsername();
-        String black = gameData.blackUsername();
+        String white = req.gameData.whiteUsername();
+        String black = req.gameData.blackUsername();
 
         String newWhite = white;
         String newBlack = black;
 
-        if (username.equals(white)) {
+        if (req.username.equals(white)) {
             newWhite = null;
-        } else if (username.equals(black)) {
+        } else if (req.username.equals(black)) {
             newBlack = null;
         }
 
         GameData updatedGame = new GameData(
-                gameData.gameID(),
+                req.gameId,
                 newWhite,
                 newBlack,
-                gameData.gameName(),
-                gameData.game()
+                req.gameData.gameName(),
+                req.gameData.game()
         );
 
-        gameDAO.updateGame(gameId, updatedGame);
+        gameDAO.updateGame(req.gameId, updatedGame);
 
-        connections.remove(gameId, ctx.session);
+        connections.remove(req.gameId, ctx.session);
         sessionGameMap.remove(ctx.session);
 
-        connections.broadcast(gameId, null,
-                new NotificationMessage(username + " left the game"));
+        connections.broadcast(req.gameId, null,
+                new NotificationMessage(req.username + " left the game"));
     }
 
     private void sendError(WsMessageContext ctx, String message) {
