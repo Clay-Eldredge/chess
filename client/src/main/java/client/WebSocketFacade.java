@@ -17,24 +17,23 @@ import java.net.URISyntaxException;
 public class WebSocketFacade extends Endpoint {
 
     private Session session;
-    private final NotificationHandler notificationHandler;
+    private final ChessClient chessClient;
     private final Gson gson = new Gson();
 
-    public WebSocketFacade(String url, NotificationHandler notificationHandler) throws ResponseException {
+    public WebSocketFacade(String url, ChessClient chessClient) throws ResponseException {
         try {
             url = url.replace("http", "ws");
             URI socketURI = new URI(url + "/ws");
+            System.out.println(socketURI);
 
             WebSocketContainer container = ContainerProvider.getWebSocketContainer();
             this.session = container.connectToServer(this, socketURI);
-            this.notificationHandler = notificationHandler;
+            this.chessClient = chessClient;
 
             this.session.addMessageHandler(new MessageHandler.Whole<String>() {
                 @Override
                 public void onMessage(String message) {
                     handleMessage(message);
-                    NotificationMessage notification = new Gson().fromJson(message, NotificationMessage.class);
-                    // TODO send notification
                 }
             });
         } catch (DeploymentException | IOException | URISyntaxException ex) {
@@ -50,6 +49,7 @@ public class WebSocketFacade extends Endpoint {
                 LoadGameMessage load =
                         gson.fromJson(message, LoadGameMessage.class);
                 System.out.println(load);
+                chessClient.notify(load);
             }
             case ERROR -> {
                 ErrorMessage error =
@@ -80,9 +80,17 @@ public class WebSocketFacade extends Endpoint {
         sendCommand(new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameId));
     }
 
+    public void connect(String authToken, int gameId) throws ResponseException {
+        sendCommand(new UserGameCommand(
+                UserGameCommand.CommandType.CONNECT,
+                authToken,
+                gameId
+        ));
+    }
+
     private void sendCommand(UserGameCommand command) throws ResponseException {
         try {
-            session.getBasicRemote().sendText(new Gson().toJson(command));
+            session.getBasicRemote().sendText(gson.toJson(command));
         } catch (IOException ex) {
             throw new ResponseException(500, ex.getMessage());
         }

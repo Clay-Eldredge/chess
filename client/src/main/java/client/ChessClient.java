@@ -1,12 +1,13 @@
 package client;
 
 import chess.ChessGame;
-import com.google.gson.Gson;
-import model.GameData;
 import results.*;
 import ui.EscapeSequences;
 import websocket.commands.MakeMoveCommand;
-import websocket.commands.UserGameCommand;
+import websocket.messages.ErrorMessage;
+import websocket.messages.LoadGameMessage;
+import websocket.messages.NotificationMessage;
+import websocket.messages.ServerMessage;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,7 +20,7 @@ public class ChessClient {
     private String username;
     private List<GameInfo> lastListedGames = new ArrayList<>();
     private State state = State.LOGGED_OUT;
-    private WebSocketClient ws;
+    private WebSocketFacade ws;
     private int currentGameId;
     private ChessGame.TeamColor myColor;
     private ChessGame currentGame;
@@ -38,26 +39,32 @@ public class ChessClient {
     public void openWebSocketConnection(int gameId) {
         try {
             // open websocket connection
-            ws = new WebSocketClient("ws://localhost:8080/ws");
+            ws = new WebSocketFacade("ws://localhost:8080", this);
 
             // send the initial CONNECT command
-            UserGameCommand connect = new UserGameCommand(
-                    UserGameCommand.CommandType.CONNECT,
-                    authToken,
-                    gameId
-            );
-            ws.send(connect);
+            ws.connect(authToken, gameId);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
     }
 
-    public void parseWebsocketMessage(String msg) {
-        Gson gson = new Gson();
-        // UPDATE GAME TODO
-
-        paintBoard.paint(currentGame, myColor);
+    public void notify(ServerMessage message) {
+        switch (message.getServerMessageType()) {
+            case LOAD_GAME -> {
+                LoadGameMessage load = (LoadGameMessage) message;
+                currentGame = load.getGame().game();
+                paintBoard.paint(currentGame, myColor);
+            }
+            case NOTIFICATION -> {
+                NotificationMessage note = (NotificationMessage) message;
+                System.out.println(note.getMessage());
+            }
+            case ERROR -> {
+                ErrorMessage error = (ErrorMessage) message;
+                System.out.println(error.getErrorMessage());
+            }
+        }
     }
 
     public String eval(String input) {
@@ -242,20 +249,17 @@ client has no state
             throw new ResponseException(400, "Color already taken!");
         }
 
-        int currentGameId = game.gameID();
+        int curGameId = game.gameID();
 
-        server.join(currentGameId, color, authToken);
+        server.join(curGameId, color, authToken);
 
-        this.currentGameId = game.gameID();
+        this.currentGameId = curGameId;
+        this.myColor = color;
         this.currentGame = new ChessGame();
 
         openWebSocketConnection(currentGameId);
 
-        ws.setMessageListener(this::parseWebsocketMessage);
-
         state = State.IN_GAME;
-
-        paintBoard.paint(new ChessGame(), color);
 
         return "Joined game " + game.gameName() + " as " + color;
     }
@@ -287,8 +291,6 @@ client has no state
         this.currentGame = new ChessGame();
 
         openWebSocketConnection(currentGameId);
-
-        ws.setMessageListener(this::parseWebsocketMessage);
 
         state = State.OBSERVING_GAME;
 
@@ -339,13 +341,6 @@ client has no state
                 from,
                 to
         );
-
-        try {
-            ws.send(cmd);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Failed to send move";
-        }
 
         return "Move sent: " + from + " -> " + to;
     }
