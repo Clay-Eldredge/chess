@@ -14,6 +14,15 @@ public class ChessGame {
 
     private ChessBoard board;
     private ChessGame.TeamColor currentTurn;
+    private boolean gameEnded = false;
+
+    public void setGameEnded() {
+        this.gameEnded = true;
+    }
+
+    public boolean isGameEnded() {
+        return gameEnded;
+    }
 
 
     public ChessGame() {

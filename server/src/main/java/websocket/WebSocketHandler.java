@@ -6,6 +6,7 @@ import dataaccess.AuthDAO;
 import dataaccess.GameDAO;
 import io.javalin.websocket.*;
 import model.AuthData;
+import model.GameData;
 import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 import websocket.messages.*;
@@ -118,6 +119,11 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         var gameData = gameDAO.getGame(gameId);
         var game = gameData.game();
 
+        if (game.isGameEnded()) {
+            sendError(ctx, "game already over");
+            return;
+        }
+
         String white = gameData.whiteUsername();
         String black = gameData.blackUsername();
 
@@ -146,11 +152,11 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
         gameDAO.updateGame(gameId, gameData);
 
-        connections.broadcast(gameId, null,
-                new LoadGameMessage(gameData));
+        connections.broadcast(gameId, ctx.session,
+                new NotificationMessage(username + " made a move"));
 
         connections.broadcast(gameId, null,
-                new NotificationMessage(username + " made a move"));
+                new LoadGameMessage(gameData));
 
         if (game.isInCheckmate(game.getTeamTurn())) {
             connections.broadcast(gameId, null,
@@ -175,15 +181,26 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         int gameId = cmd.getGameID();
 
         var gameData = gameDAO.getGame(gameId);
+        var game = gameData.game();
 
-        // TODO: mark game as resigned
+        if (game.isGameEnded()) {
+            sendError(ctx, "game already over");
+            return;
+        }
+
+        String white = gameData.whiteUsername();
+        String black = gameData.blackUsername();
+
+        if (!username.equals(white) && !username.equals(black)) {
+            sendError(ctx, "observers cannot resign");
+            return;
+        }
+
+        game.setGameEnded();
         gameDAO.updateGame(gameId, gameData);
 
         connections.broadcast(gameId, null,
                 new NotificationMessage(username + " resigned"));
-
-        connections.broadcast(gameId, null,
-                new LoadGameMessage(gameData));
     }
 
     private void leave(WsMessageContext ctx, UserGameCommand cmd) throws Exception {
@@ -195,6 +212,30 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
         String username = auth.username();
         int gameId = cmd.getGameID();
+
+        var gameData = gameDAO.getGame(gameId);
+
+        String white = gameData.whiteUsername();
+        String black = gameData.blackUsername();
+
+        String newWhite = white;
+        String newBlack = black;
+
+        if (username.equals(white)) {
+            newWhite = null;
+        } else if (username.equals(black)) {
+            newBlack = null;
+        }
+
+        GameData updatedGame = new GameData(
+                gameData.gameID(),
+                newWhite,
+                newBlack,
+                gameData.gameName(),
+                gameData.game()
+        );
+
+        gameDAO.updateGame(gameId, updatedGame);
 
         connections.remove(gameId, ctx.session);
         sessionGameMap.remove(ctx.session);
