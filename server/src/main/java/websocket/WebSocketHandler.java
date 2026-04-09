@@ -65,15 +65,33 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         String username = auth.username();
         int gameId = cmd.getGameID();
 
+        var gameData = gameDAO.getGame(gameId);
+
+        String white = gameData.whiteUsername();
+        String black = gameData.blackUsername();
+
+        String role;
+        if (username.equals(white)) {
+            role = "WHITE";
+        } else if (username.equals(black)) {
+            role = "BLACK";
+        } else {
+            role = "OBSERVER";
+        }
+
         connections.add(gameId, ctx.session);
         sessionGameMap.put(ctx.session, gameId);
 
-        var gameData = gameDAO.getGame(gameId);
-
         ctx.send(gson.toJson(new LoadGameMessage(gameData)));
 
+        String message = switch (role) {
+            case "WHITE" -> username + " joined as white";
+            case "BLACK" -> username + " joined as black";
+            default -> username + " joined as an observer";
+        };
+
         connections.broadcast(gameId, ctx.session,
-                new NotificationMessage(username + " joined the game"));
+                new NotificationMessage(message));
     }
 
     private void makeMove(WsMessageContext ctx, UserGameCommand cmd) throws Exception {

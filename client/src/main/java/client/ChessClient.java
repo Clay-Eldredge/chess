@@ -29,7 +29,6 @@ public class ChessClient {
     public ChessClient(String serverUrl) {
         server = new ServerFacade(serverUrl);
         this.serverUrl = serverUrl;
-
     }
 
     public void printPrompt() {
@@ -39,14 +38,13 @@ public class ChessClient {
     public void openWebSocketConnection(int gameId) {
         try {
             // open websocket connection
-            ws = new WebSocketFacade("ws://localhost:8080", this);
+            ws = new WebSocketFacade(serverUrl, this);
 
             // send the initial CONNECT command
             ws.connect(authToken, gameId);
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     public void notify(ServerMessage message) {
@@ -294,8 +292,6 @@ client has no state
 
         state = State.OBSERVING_GAME;
 
-        paintBoard.paint(new ChessGame(), ChessGame.TeamColor.WHITE);
-
         return "Observing game " + game.gameName();
     }
 
@@ -306,6 +302,8 @@ client has no state
         if (state != State.IN_GAME && state != State.OBSERVING_GAME) {
             throw new ResponseException(400, "You must be observing or playing a game");
         }
+
+
 
         return "string";
     }

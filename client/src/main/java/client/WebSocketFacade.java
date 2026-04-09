@@ -48,18 +48,17 @@ public class WebSocketFacade extends Endpoint {
             case LOAD_GAME -> {
                 LoadGameMessage load =
                         gson.fromJson(message, LoadGameMessage.class);
-                System.out.println(load);
                 chessClient.notify(load);
             }
             case ERROR -> {
                 ErrorMessage error =
                         gson.fromJson(message, ErrorMessage.class);
-                System.out.println(error);
+                chessClient.notify(error);
             }
             case NOTIFICATION -> {
                 NotificationMessage note =
                         gson.fromJson(message, NotificationMessage.class);
-                System.out.println(note);
+                chessClient.notify(note);
             }
         }
     }
