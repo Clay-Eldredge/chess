@@ -107,4 +107,74 @@ public class PaintBoard {
             case PAWN -> "P";
         };
     }
+
+    public void paintLegalMoves(ChessGame game,
+                                ChessPosition selected,
+                                ChessGame.TeamColor perspective) {
+
+        ChessBoard board = game.getBoard();
+
+        var moves = game.validMoves(selected);
+
+        int rowStart = (perspective == ChessGame.TeamColor.WHITE) ? 8 : 1;
+        int rowEnd = (perspective == ChessGame.TeamColor.WHITE) ? 0 : 9;
+        int rowStep = (perspective == ChessGame.TeamColor.WHITE) ? -1 : 1;
+
+        int colStart = (perspective == ChessGame.TeamColor.WHITE) ? 1 : 8;
+        int colEnd = (perspective == ChessGame.TeamColor.WHITE) ? 9 : 0;
+        int colStep = (perspective == ChessGame.TeamColor.WHITE) ? 1 : -1;
+
+        printColumnLabels(colStart, colEnd, colStep);
+
+        for (int row = rowStart; row != rowEnd; row += rowStep) {
+
+            System.out.print(rowLabel(row));
+
+            for (int col = colStart; col != colEnd; col += colStep) {
+
+                ChessPosition current = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(current);
+
+                boolean isLight = (row + col) % 2 == 0;
+
+                String bgColor;
+
+                // 🔹 Selected square (highlight stronger)
+                if (current.equals(selected)) {
+                    bgColor = isLight
+                            ? EscapeSequences.SET_BG_COLOR_YELLOW
+                            : EscapeSequences.SET_BG_COLOR_YELLOW;
+
+                    // 🔹 Legal move squares
+                } else if (moves != null && moves.stream()
+                        .anyMatch(m -> m.getEndPosition().equals(current))) {
+
+                    bgColor = isLight
+                            ? EscapeSequences.SET_BG_COLOR_YELLOW
+                            : EscapeSequences.SET_BG_COLOR_YELLOW;
+
+                    // 🔹 Normal board
+                } else {
+                    bgColor = isLight
+                            ? EscapeSequences.SET_BG_COLOR_DARK_GREY
+                            : EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
+                }
+
+                System.out.print(bgColor);
+
+                if (piece == null) {
+                    System.out.print(CELL);
+                } else {
+                    System.out.print(getColoredPiece(piece));
+                }
+
+                System.out.print(EscapeSequences.RESET_BG_COLOR);
+            }
+
+            System.out.print(rowLabel(row));
+            System.out.println();
+        }
+
+        printColumnLabels(colStart, colEnd, colStep);
+    }
 }

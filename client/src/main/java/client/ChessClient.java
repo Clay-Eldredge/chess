@@ -1,6 +1,7 @@
 package client;
 
 import chess.ChessGame;
+import chess.ChessPosition;
 import results.*;
 import ui.EscapeSequences;
 import websocket.commands.MakeMoveCommand;
@@ -303,9 +304,9 @@ client has no state
             throw new ResponseException(400, "You must be observing or playing a game");
         }
 
+        paintBoard.paint(this.currentGame, this.myColor);
 
-
-        return "string";
+        return "";
     }
 
     public String leave(String[] params) {
@@ -316,10 +317,24 @@ client has no state
             throw new ResponseException(400, "You must be observing or playing a game");
         }
 
+        ws.leaveGame(authToken, currentGameId);
 
         state = State.LOGGED_IN;
 
-        return "string";
+        return "Left game";
+    }
+
+    private ChessPosition getPositionFromCoordinates(String letter, String number) {
+        if (letter == null || number == null) {
+            return null;
+        }
+
+        letter = letter.toLowerCase();
+
+        int col = letter.charAt(0) - 'a' + 1;
+        int row = Integer.parseInt(number);
+
+        return new ChessPosition(row, col);
     }
 
     public String move(String[] params) {
@@ -340,6 +355,8 @@ client has no state
                 to
         );
 
+        //ws.makeMove();
+
         return "Move sent: " + from + " -> " + to;
     }
 
@@ -351,6 +368,8 @@ client has no state
             throw new ResponseException(400, "You must be playing a game");
         }
 
+        ws.resign(authToken, currentGameId);
+
         return "string";
     }
 
@@ -361,6 +380,8 @@ client has no state
         if (state != State.IN_GAME && state != State.OBSERVING_GAME) {
             throw new ResponseException(400, "You must be observing or playing a game");
         }
+
+        paintBoard.paintLegalMoves(currentGame, getPositionFromCoordinates(params[0], params[1]), myColor);
 
         return "string";
     }
