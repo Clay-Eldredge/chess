@@ -29,7 +29,9 @@ public class ConnectionManager {
 
     public void broadcast(int gameID, Session excludeSession, ServerMessage message) {
         Set<Session> sessions = connections.get(gameID);
-        if (sessions == null) return;
+        if (sessions == null) {
+            return;
+        }
 
         String json = gson.toJson(message);
 
