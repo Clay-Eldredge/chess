@@ -1,6 +1,8 @@
 package client;
 
 import chess.ChessGame;
+import chess.ChessMove;
+import chess.ChessPiece;
 import chess.ChessPosition;
 import results.*;
 import ui.EscapeSequences;
@@ -337,27 +339,41 @@ client has no state
         return new ChessPosition(row, col);
     }
 
+    private ChessPiece.PieceType parsePromotion(String input) {
+        return switch (input.toLowerCase()) {
+            case "queen", "q" -> ChessPiece.PieceType.QUEEN;
+            case "rook", "r" -> ChessPiece.PieceType.ROOK;
+            case "bishop", "b" -> ChessPiece.PieceType.BISHOP;
+            case "knight", "n" -> ChessPiece.PieceType.KNIGHT;
+            default -> throw new ResponseException(400, "Invalid promotion piece");
+        };
+    }
+
     public String move(String[] params) {
-        if (params.length != 4) {
-            throw new ResponseException(400, "Expected <letter coordinate 1> <number coordinate 1> <letter coordinate 2> <number coordinate 2>");
+        if (params.length != 4 && params.length != 5) {
+            throw new ResponseException(400,
+                    "Expected <fromCol> <fromRow> <toCol> <toRow> [promotion]");
         }
+
         if (state != State.IN_GAME) {
             throw new ResponseException(400, "You must be observing or playing a game");
         }
 
-        String from = params[0] + params[1];
-        String to = params[2] + params[3];
+        ChessPosition from = getPositionFromCoordinates(params[0], params[1]);
+        ChessPosition to = getPositionFromCoordinates(params[2], params[3]);
 
-        MakeMoveCommand cmd = new MakeMoveCommand(
-                authToken,
-                currentGameId,
-                from,
-                to
-        );
+        ChessPiece.PieceType promotion = null;
 
-        //ws.makeMove();
+        if (params.length == 5) {
+            promotion = parsePromotion(params[4]);
+        }
 
-        return "Move sent: " + from + " -> " + to;
+        ChessMove move = new ChessMove(from, to, promotion);
+
+        ws.makeMove(authToken, currentGameId, move);
+
+        return "Move sent: " + params[0] + params[1] + " -> " + params[2] + params[3] +
+                (promotion != null ? " promoting to " + promotion : "");
     }
 
     public String resign(String[] params) {

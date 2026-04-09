@@ -1,5 +1,6 @@
 package client;
 
+import chess.ChessMove;
 import com.google.gson.Gson;
 import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
@@ -67,8 +68,8 @@ public class WebSocketFacade extends Endpoint {
     public void onOpen(Session session, EndpointConfig config) {
     }
 
-    public void makeMove(String authToken, int gameId, String from, String to) throws ResponseException {
-        sendCommand(new MakeMoveCommand(authToken, gameId, from, to));
+    public void makeMove(String authToken, int gameId, ChessMove move) throws ResponseException {
+        sendCommand(new MakeMoveCommand(authToken, gameId, move));
     }
 
     public void resign(String authToken, int gameId) throws ResponseException {

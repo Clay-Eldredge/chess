@@ -1,5 +1,6 @@
 package websocket;
 
+import chess.ChessGame;
 import com.google.gson.Gson;
 import dataaccess.AuthDAO;
 import dataaccess.GameDAO;
@@ -33,13 +34,23 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     @Override
     public void handleMessage(WsMessageContext ctx) {
         try {
-            UserGameCommand cmd = gson.fromJson(ctx.message(), UserGameCommand.class);
+            String json = ctx.message();
 
-            switch (cmd.getCommandType()) {
-                case CONNECT -> connect(ctx, cmd);
-                case MAKE_MOVE -> makeMove(ctx, cmd);
-                case RESIGN -> resign(ctx, cmd);
-                case LEAVE -> leave(ctx, cmd);
+            UserGameCommand base = gson.fromJson(json, UserGameCommand.class);
+
+            switch (base.getCommandType()) {
+
+                case CONNECT -> connect(ctx, base);
+
+                case MAKE_MOVE -> {
+                    MakeMoveCommand moveCmd =
+                            gson.fromJson(json, MakeMoveCommand.class);
+                    makeMove(ctx, moveCmd);
+                }
+
+                case RESIGN -> resign(ctx, base);
+
+                case LEAVE -> leave(ctx, base);
             }
 
         } catch (Exception e) {
@@ -94,7 +105,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 new NotificationMessage(message));
     }
 
-    private void makeMove(WsMessageContext ctx, UserGameCommand cmd) throws Exception {
+    private void makeMove(WsMessageContext ctx, MakeMoveCommand cmd) throws Exception {
         AuthData auth = authDAO.getAuth(cmd.getAuthToken());
         if (auth == null) {
             sendError(ctx, "unauthorized");
@@ -105,19 +116,52 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         int gameId = cmd.getGameID();
 
         var gameData = gameDAO.getGame(gameId);
-        var game = gameData;
+        var game = gameData.game();
 
-        MakeMoveCommand moveCmd = (MakeMoveCommand) cmd;
+        String white = gameData.whiteUsername();
+        String black = gameData.blackUsername();
 
-        // TODO: validate turn + legality
+        ChessGame.TeamColor playerColor;
+
+        if (username.equals(white)) {
+            playerColor = ChessGame.TeamColor.WHITE;
+        } else if (username.equals(black)) {
+            playerColor = ChessGame.TeamColor.BLACK;
+        } else {
+            sendError(ctx, "observers cannot make moves");
+            return;
+        }
+
+        if (game.getTeamTurn() != playerColor) {
+            sendError(ctx, "not your turn");
+            return;
+        }
+
+        try {
+            game.makeMove(cmd.getMove());
+        } catch (Exception e) {
+            sendError(ctx, "invalid move");
+            return;
+        }
 
         gameDAO.updateGame(gameId, gameData);
 
         connections.broadcast(gameId, null,
-                new LoadGameMessage(game));
+                new LoadGameMessage(gameData));
 
         connections.broadcast(gameId, null,
                 new NotificationMessage(username + " made a move"));
+
+        if (game.isInCheckmate(game.getTeamTurn())) {
+            connections.broadcast(gameId, null,
+                    new NotificationMessage(game.getTeamTurn() + " is in checkmate"));
+        } else if (game.isInCheck(game.getTeamTurn())) {
+            connections.broadcast(gameId, null,
+                    new NotificationMessage(game.getTeamTurn() + " is in check"));
+        } else if (game.isInStalemate(game.getTeamTurn())) {
+            connections.broadcast(gameId, null,
+                    new NotificationMessage("stalemate"));
+        }
     }
 
     private void resign(WsMessageContext ctx, UserGameCommand cmd) throws Exception {

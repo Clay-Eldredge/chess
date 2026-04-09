@@ -9,6 +9,7 @@ public class PaintBoard {
     private static final String PAD = " ";
 
     public void paint(ChessGame game, ChessGame.TeamColor perspective) {
+        System.out.println();
         ChessBoard board = game.getBoard();
 
         int rowStart = (perspective == ChessGame.TeamColor.WHITE) ? 8 : 1;
@@ -111,7 +112,7 @@ public class PaintBoard {
     public void paintLegalMoves(ChessGame game,
                                 ChessPosition selected,
                                 ChessGame.TeamColor perspective) {
-
+        System.out.println();
         ChessBoard board = game.getBoard();
 
         var moves = game.validMoves(selected);
